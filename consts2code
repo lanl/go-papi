@@ -1,0 +1,63 @@
+#! /usr/bin/env perl
+
+# Extract PAPI constants from a C header file
+# and convert them to Go code.
+#
+# By Scott Pakin <pakin@lanl.gov>
+
+use File::Basename;
+use warnings;
+use strict;
+
+# Parse the command line.
+die "Usage: $0 <filename.h> <datatype> <comment> [<regex>]\n" if $#ARGV < 2;
+my $hfilename = $ARGV[0];
+my $datatype = $ARGV[1];
+my $comment = $ARGV[2];
+my $regex = $ARGV[3] || ".";
+
+# Find all commented PAPI_* definitions.
+my %def2comment;
+open(HFILE, "<$hfilename") || die "open: $!\n";
+while (my $oneline = <HFILE>) {
+    next if $oneline !~ $regex;
+    next if $oneline !~ m,^\#define PAPI_([_A-Z0-9]+)\s+.*/\*(?:\*<)?\s*(.*?)\s*\*/,;
+    $def2comment{$1} = $2;
+}
+close HFILE;
+
+# Run the .h file through the C preprocessor to filter away
+# definitions that are commented out.
+my %all_def2comments = %def2comment;
+%def2comment = ();
+open(CPP, "cpp -dM $hfilename|") || die "open: $!\n";
+while (my $oneline = <CPP>) {
+    next if $oneline !~ $regex;
+    next if $oneline !~ m,^\#define PAPI_([_A-Z0-9]+)\s+,;
+    next if !defined $all_def2comments{$1};
+    $def2comment{$1} = $all_def2comments{$1};
+}
+close CPP || die "close: $!\n";
+
+# Write the package contents.
+my $hfilebase = basename $hfilename;
+open(GOFMT, "|gofmt") || die "open: $!\n";
+print GOFMT <<"GO_HEADER";
+package papi
+
+/*
+This file was generated automatically from $hfilebase.
+*/
+
+// #include <papi.h>
+import "C"
+
+// $comment
+const (
+GO_HEADER
+    ;
+foreach my $def (sort keys %def2comment) {
+    print GOFMT "$def $datatype = C.PAPI_$def   // $def2comment{$def}\n";
+}
+print GOFMT ")\n";
+close GOFMT;
