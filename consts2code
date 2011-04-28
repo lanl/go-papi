@@ -10,11 +10,29 @@ use warnings;
 use strict;
 
 # Parse the command line.
-die "Usage: $0 <filename.h> <datatype> <comment> [<regex>]\n" if $#ARGV < 2;
+die "Usage: $0 <filename.h> [<datatype> <comment> [<regex>]]\n" if $#ARGV < 0;
 my $hfilename = $ARGV[0];
 my $datatype = $ARGV[1];
 my $comment = $ARGV[2];
 my $regex = $ARGV[3] || ".";
+
+# Find the header file by passing it to the C preprocessor.  If we
+# were given only a header file, output it and exit.
+my $full_hfilename;
+open(CPP, "echo '#include <$hfilename>' | cpp - |") || die "open: $!\n";
+while (my $oneline = <CPP>) {
+    if ($oneline =~ /\"([^\"]+$hfilename)\"/) {
+	$full_hfilename = $1;
+	last;
+    }
+}
+close CPP;
+die "${0}: cpp failed to find $hfilename\n" if !defined $full_hfilename;
+$hfilename = $full_hfilename;
+if ($#ARGV < 2) {
+    print $hfilename, "\n";
+    exit 0;
+}
 
 # Find all commented PAPI_* definitions.
 my %def2comment;

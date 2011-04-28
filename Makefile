@@ -12,7 +12,8 @@ CGOFILES=\
 	papi-errno.go\
 	papi-event.go\
 
-EXTRA_DIST=\
+DISTFILES=\
+	papi.go\
 	consts2code\
 	Makefile
 
@@ -20,45 +21,35 @@ include $(GOROOT)/src/Make.pkg
 
 # ---------------------------------------------------------------------------
 
-# If you need to regenerate papi-errno.go and papi-event.go, here's
-# how to do it.  Note that we add the generated .go files to
-# CLEANFILES only if we believe we can recreate them.
+# We use a helper Perl script, consts2code, to generate papi-errno.go
+# and papi-event.go.
 
-PAPI_INCDIR=/usr/include
 PERL=perl
-
-ifeq ($(wildcard $(PAPI_INCDIR)/papi.h), )
-
-papi-errno.go papi-event.go:
-	$(error Please define PAPI_INCDIR as the directory containing papi.h and papiStdEventDefs.h)
-
-else
+PAPI_INCDIR:=$(dir $(shell $(PERL) consts2code papi.h))
 
 papi-errno.go: consts2code $(PAPI_INCDIR)/papi.h
 	$(PERL) consts2code \
-	  $(PAPI_INCDIR)/papi.h \
+	  papi.h \
 	  Errno \
 	  "The following constants can be returned as Errno values from PAPI functions." \
 	  'PAPI_E.*-\d|PAPI_OK' > papi-errno.go
 
 papi-event.go: consts2code $(PAPI_INCDIR)/papiStdEventDefs.h
 	$(PERL) consts2code \
-	  $(PAPI_INCDIR)/papiStdEventDefs.h \
+	  papiStdEventDefs.h \
 	  Event \
 	  "The following constants represent PAPI's standard event types." \
 	  '_idx' | grep -v PAPI_END > papi-event.go
 
 CLEANFILES += papi-errno.go papi-event.go
 
-endif
-
 # ---------------------------------------------------------------------------
 
 FULLNAME=gopapi-$(VERSION)
 
-dist: $(CGOFILES) $(EXTRA_DIST)
+dist: $(DISTFILES)
 	mkdir $(FULLNAME)
-	cp $(CGOFILES) $(EXTRA_DIST) $(FULLNAME)
+	cp $(DISTFILES) $(FULLNAME)
 	tar -czf $(FULLNAME).tar.gz $(FULLNAME)
 	$(RM) -r $(FULLNAME)
 	tar -tzvf $(FULLNAME).tar.gz
