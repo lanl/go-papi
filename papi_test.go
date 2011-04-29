@@ -1,5 +1,7 @@
-// See if the PAPI package works.
-// By Scott Pakin <pakin@lanl.gov>.
+// Copyright (C) 2011, Los Alamos National Security, LLC.
+// Use of this source code is governed by a BSD-style license.
+
+// This file tests various features of the PAPI library.
 
 package papi
 

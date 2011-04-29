@@ -9,11 +9,15 @@ TARG=papi
 
 CGOFILES=\
 	papi.go\
+	papi-high.go\
+	papi-low.go\
 	papi-errno.go\
 	papi-event.go\
 
 DISTFILES=\
 	papi.go\
+	papi-high.go\
+	papi-low.go\
 	consts2code\
 	Makefile
 
