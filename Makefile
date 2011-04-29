@@ -19,7 +19,10 @@ DISTFILES=\
 	papi-high.go\
 	papi-low.go\
 	consts2code\
-	Makefile
+	Makefile\
+	papi_test.go\
+        papi_hl_test.go\
+	papi_ll_test.go\
 
 include $(GOROOT)/src/Make.pkg
 
