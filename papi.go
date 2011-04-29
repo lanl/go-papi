@@ -8,8 +8,6 @@ provides access to CPU performance counters and to other low-level
 system information.
 
 */
-
-
 package papi
 
 /*
