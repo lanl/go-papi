@@ -29,6 +29,13 @@ import "C"
 import "fmt"
 import "unsafe"
 
+
+// NumCounters is the number of hardware counters available on the
+// system.  Consequently, the slice passed to functions such as
+// StartCounters() should contain no more than NumCounters elements.
+var NumCounters int
+
+
 // An Error can represent any printable error condition.
 type Error interface {
 	String() string
@@ -56,10 +63,22 @@ type Event int32
 
 // Convert a PAPI event code to a string.
 func (ecode Event) String() (ename string) {
-	cstring := C.CString(string(make([]byte, C.PAPI_MAX_STR_LEN)))
+	cstring := (*C.char)(C.malloc(C.PAPI_MAX_STR_LEN))
 	defer C.free(unsafe.Pointer(cstring))
 	if Errno(C.PAPI_event_code_to_name(C.int(ecode), cstring)) == OK {
 		ename = C.GoString(cstring)
+	}
+	return
+}
+
+
+// Convert a string to a PAPI event code.
+func StringToEvent(ename string) (ecode Event, err Errno) {
+	cstring := C.CString(ename)
+	defer C.free(unsafe.Pointer(cstring))
+	var c_ecode C.int
+	if err = Errno(C.PAPI_event_name_to_code(cstring, &c_ecode)); err == OK {
+		ecode = Event(c_ecode)
 	}
 	return
 }
@@ -83,6 +102,13 @@ func init() {
 	threadval := C.initialize_papi_threading()
 	if threadval != C.PAPI_OK {
 		panic(Errno(threadval).String())
+	}
+
+	// Initialize the high-level counter support.
+	if nc := C.PAPI_num_counters(); nc >= 0 {
+		NumCounters = int(nc)
+	} else {
+		panic(Errno(nc).String())
 	}
 }
 
@@ -126,7 +152,7 @@ func Flips() (rtime, ptime float32, flpins int64, mflips float32, err Errno) {
 
 
 // Return the total real time, total process time, total
-// floating-point operations, and average Mflip/s since the previous
+// floating-point operations, and average Mflop/s since the previous
 // call to PAPI.Flops().
 func Flops() (rtime, ptime float32, flpops int64, mflops float32, err Errno) {
 	var c_rtime, c_ptime, c_mflops C.float
@@ -149,5 +175,44 @@ func Ipc() (rtime, ptime float32, ins int64, ipc float32, err Errno) {
 	if err == OK {
 		rtime, ptime, ins, ipc = float32(c_rtime), float32(c_ptime), int64(c_ins), float32(c_ipc)
 	}
+	return
+}
+
+
+// Given a slice of event codes, start counting the corresponding events.
+func StartCounters(evcodes []Event) (err Errno) {
+	events := (*C.int)(&evcodes[0])
+	numEvents := C.int(len(evcodes))
+	err = Errno(C.PAPI_start_counters(events, numEvents))
+	return
+}
+
+
+// Store the current event counts in a given slice and reset the
+// counters to zero.
+func ReadCounters(values []int64) (err Errno) {
+	valuePtr := (*C.longlong)(&values[0])
+	numValues := C.int(len(values))
+	err = Errno(C.PAPI_read_counters(valuePtr, numValues))
+	return
+}
+
+
+// Add the current event counts to those in a given slice and reset
+// the counters to zero.
+func AccumCounters(values []int64) (err Errno) {
+	valuePtr := (*C.longlong)(&values[0])
+	numValues := C.int(len(values))
+	err = Errno(C.PAPI_accum_counters(valuePtr, numValues))
+	return
+}
+
+
+// Store the current event counts in a given slice, reset the
+// counters to zero, and stop counting the events.
+func StopCounters(values []int64) (err Errno) {
+	valuePtr := (*C.longlong)(&values[0])
+	numValues := C.int(len(values))
+	err = Errno(C.PAPI_stop_counters(valuePtr, numValues))
 	return
 }
