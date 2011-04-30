@@ -257,6 +257,26 @@ type HardwareInfo struct {
 
 // ----------------------------------------------------------------------
 
+// DynMemInfo represents the dynamic memory usage of the current
+// program.  According to the PAPI documentation, this function is
+// currently implemented only for the Linux operating system.
+type DynMemInfo struct {
+	Peak          int64 // Peak size of process image, may be 0 on older Linux systems
+	Size          int64 // Size of process image
+	Resident      int64 // Resident set size
+	HighWaterMark int64 // High-water memory usage
+	Shared        int64 // Shared memory
+	Text          int64 // Memory allocated to code
+	Library       int64 // Memory allocated to libraries
+	Heap          int64 // Size of the heap
+	Locked        int64 // Locked memory
+	Stack         int64 // Size of the stack
+	PageSize      int64 // Size of a page
+	PTE           int64 // Size  of page table entries, may be 0 on older Linux systems
+}
+
+// ----------------------------------------------------------------------
+
 // Before we do anything else we need to initialize the PAPI library.
 func init() {
 	// Initialize the library proper.

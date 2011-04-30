@@ -129,3 +129,30 @@ func GetHardwareInfo() HardwareInfo {
 		ClockMHz:      int32(hw.clock_mhz),
 		MemHierarchy:  mh}
 }
+
+
+// Acquire and return all sorts of information about the current
+// process's dynamic memory usage.  In addition to returning an
+// overall error code, GetDynMemInfo() can also return an Errno cast
+// to an int64 for any individual field.  To check for that case, note
+// that all errors are represented as negative Errno values.
+func GetDynMemInfo() (dmem DynMemInfo, err Errno) {
+	var c_dmem C.PAPI_dmem_info_t
+	if err = Errno(C.PAPI_get_dmem_info(&c_dmem)); err != OK {
+		return
+	}
+	dmem = DynMemInfo{
+		Peak:          int64(c_dmem.peak),
+		Size:          int64(c_dmem.size),
+		Resident:      int64(c_dmem.resident),
+		HighWaterMark: int64(c_dmem.high_water_mark),
+		Shared:        int64(c_dmem.shared),
+		Text:          int64(c_dmem.text),
+		Library:       int64(c_dmem.library),
+		Heap:          int64(c_dmem.heap),
+		Locked:        int64(c_dmem.locked),
+		Stack:         int64(c_dmem.stack),
+		PageSize:      int64(c_dmem.pagesize),
+		PTE:           int64(c_dmem.pte)}
+	return
+}
