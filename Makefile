@@ -11,6 +11,7 @@ CGOFILES=\
 	papi.go\
 	papi-high.go\
 	papi-low.go\
+	papi-mh.go\
 	papi-errno.go\
 	papi-event.go\
 
@@ -18,10 +19,11 @@ DISTFILES=\
 	papi.go\
 	papi-high.go\
 	papi-low.go\
+	papi-mh.go\
 	consts2code\
 	Makefile\
 	papi_test.go\
-        papi_hl_test.go\
+	papi_hl_test.go\
 	papi_ll_test.go\
 
 include $(GOROOT)/src/Make.pkg

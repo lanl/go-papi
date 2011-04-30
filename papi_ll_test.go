@@ -68,3 +68,38 @@ func TestVirtUsec(t *testing.T) {
 			time1, time2)
 	}
 }
+
+
+// Ensure that GetExecutableInfo() at least does *something*.  Not
+// every value is populated on every system, however.
+func TestExeInfo(t *testing.T) {
+	exeInfo := GetExecutableInfo()
+	addrInfo := exeInfo.AddressInfo
+	if addrInfo.Name == "" || exeInfo.FullName == "" {
+		t.Fatal("GetExecutableInfo() returned empty program names")
+	}
+	if addrInfo.TextStart == 0 || addrInfo.TextEnd == 0 {
+		t.Fatal("GetExecutableInfo() returned zeroes for the text-segment boundaries")
+	}
+}
+
+
+// Ensure that selected pieces of hardware information are valid.
+func TestHardwareInfo(t *testing.T) {
+	hw := GetHardwareInfo()
+	if hw.TotalCPUs == 0 {
+		t.Fatal("TotalCPUs == 0")
+	}
+	if hw.VendorName == "" {
+		t.Fatal("VendorName == \"\"")
+	}
+	if hw.MHz == 0.0 {
+		t.Fatal("MHz == 0.0")
+	}
+	if hw.ClockMHz == 0.0 {
+		t.Fatal("ClockMHz == 0.0")
+	}
+	if len(hw.MemHierarchy) == 0 {
+		t.Fatal("MemHierarchy == []")
+	}
+}
