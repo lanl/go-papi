@@ -7,11 +7,12 @@ package papi
 
 import "testing"
 import "time"
+import "os"
 
 
 // Do most of the work for TestFlipFlops() by testing any of Flips(),
 // Flops(), or Ipc() high-level PAPI functions in a consistent manner.
-func testFlipFlopsHelper(t *testing.T, funcName string, hlFunc func() (float32, float32, int64, float32, Errno)) {
+func testFlipFlopsHelper(t *testing.T, funcName string, hlFunc func() (float32, float32, int64, float32, os.Error)) {
 	const sleep_usecs = 10000
 	const flops = 100
 	var someValue float64 = 123.456
@@ -19,7 +20,7 @@ func testFlipFlopsHelper(t *testing.T, funcName string, hlFunc func() (float32, 
 
 	// Test Flips().
 	rtime1, ptime1, other1, _, err := hlFunc()
-	if err != OK {
+	if err != nil {
 		t.Fatal(err)
 	}
 	for i := 0; i < flops; i++ {
@@ -30,7 +31,7 @@ func testFlipFlopsHelper(t *testing.T, funcName string, hlFunc func() (float32, 
 	}
 	time.Sleep(sleep_usecs * 1000)
 	rtime2, ptime2, other2, _, err := hlFunc()
-	if err != OK {
+	if err != nil {
 		t.Fatal(err)
 	}
 	if rtime2-rtime1 < sleep_usecs/1.0e6 {
@@ -45,7 +46,7 @@ func testFlipFlopsHelper(t *testing.T, funcName string, hlFunc func() (float32, 
 		t.Fatalf("%s() observed too few counts: %d >= %d",
 			other2-other1, flops)
 	}
-	if err := StopCounters(counterValues); err != OK {
+	if err := StopCounters(counterValues); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -70,13 +71,13 @@ func TestHLCounters(t *testing.T) {
 	} else {
 		usedEvents = eventList[0 : NumCounters-1]
 	}
-	if err := StartCounters(usedEvents); err != OK {
+	if err := StartCounters(usedEvents); err != nil {
 		t.Fatal(err)
 	}
 
 	// Read the counters right away.
 	counterValues := make([]int64, len(usedEvents))
-	if err := ReadCounters(counterValues); err != OK {
+	if err := ReadCounters(counterValues); err != nil {
 		t.Fatal(err)
 	}
 
@@ -88,7 +89,7 @@ func TestHLCounters(t *testing.T) {
 
 	// Ensure that at least one of our counters increased.  All
 	// should increase, but perhaps some don't on certain hardware.
-	if err := AccumCounters(counterValues); err != OK {
+	if err := AccumCounters(counterValues); err != nil {
 		t.Fatal(err)
 	}
 	anyChanged := false
@@ -110,7 +111,7 @@ func TestHLCounters(t *testing.T) {
 	// Ensure that at least one of our counters increased.  All
 	// should increase, but perhaps some don't on certain hardware.
 	counterValues = make([]int64, len(counterValues)) // Clear all counters
-	if err := StopCounters(counterValues); err != OK {
+	if err := StopCounters(counterValues); err != nil {
 		t.Fatal(err)
 	}
 	anyChanged = false

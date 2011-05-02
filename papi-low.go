@@ -17,6 +17,7 @@ int get_cache_type(PAPI_mh_cache_info_t *c) {return c->type;}
 */
 import "C"
 import "unsafe"
+import "os"
 
 
 // Return the real-time counter's value in clock cycles.
@@ -136,7 +137,7 @@ func GetHardwareInfo() HardwareInfo {
 // overall error code, GetDynMemInfo() can also return an Errno cast
 // to an int64 for any individual field.  To check for that case, note
 // that all errors are represented as negative Errno values.
-func GetDynMemInfo() (dmem DynMemInfo, err Errno) {
+func GetDynMemInfo() (dmem DynMemInfo, err os.Error) {
 	var c_dmem C.PAPI_dmem_info_t
 	if err = Errno(C.PAPI_get_dmem_info(&c_dmem)); err != OK {
 		return
@@ -154,5 +155,6 @@ func GetDynMemInfo() (dmem DynMemInfo, err Errno) {
 		Stack:         int64(c_dmem.stack),
 		PageSize:      int64(c_dmem.pagesize),
 		PTE:           int64(c_dmem.pte)}
+	err = nil
 	return
 }

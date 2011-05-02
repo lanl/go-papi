@@ -1,18 +1,20 @@
 #! /usr/bin/env perl
 
-# Extract PAPI constants from a C header file
-# and convert them to Go code.
-#
-# By Scott Pakin <pakin@lanl.gov>
+###############################################
+# Extract PAPI constants from a C header file #
+# and convert them to Go code.                #
+#                                             #
+# By Scott Pakin <pakin@lanl.gov>             #
+###############################################
 
 use File::Basename;
 use warnings;
 use strict;
 
 # Parse the command line.
-die "Usage: $0 <filename.h> [<datatype> <comment> [<regex>]]\n" if $#ARGV < 0;
+die "Usage: $0 <filename.h> [<printf_format> <comment> [<regex>]]\n" if $#ARGV < 0;
 my $hfilename = $ARGV[0];
-my $datatype = $ARGV[1];
+my $format = $ARGV[1];
 my $comment = $ARGV[2];
 my $regex = $ARGV[3] || ".";
 
@@ -78,7 +80,8 @@ const (
 GO_HEADER
     ;
 foreach my $def (sort keys %def2comment) {
-    print GOFMT "$def $datatype = C.PAPI_$def   // $def2comment{$def}\n";
+    printf GOFMT $format, $def, $def;
+    print GOFMT " // $def2comment{$def}\n";
 }
 print GOFMT ")\n";
 close GOFMT;

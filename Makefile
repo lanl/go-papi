@@ -39,14 +39,16 @@ PAPI_INCDIR:=$(dir $(shell $(PERL) consts2code papi.h))
 papi-errno.go: consts2code $(PAPI_INCDIR)/papi.h
 	$(PERL) consts2code \
 	  papi.h \
-	  Errno \
+	  '%s os.Error = Errno(C.PAPI_%s)' \
 	  "The following constants can be returned as Errno values from PAPI functions." \
-	  'PAPI_E.*-\d|PAPI_OK' > papi-errno.go
+	  'PAPI_E.*-\d|PAPI_OK' | \
+	  awk '{print} /import/ {print "import \"os\""}' | \
+	  sed 's/const/var/' > papi-errno.go
 
 papi-event.go: consts2code $(PAPI_INCDIR)/papiStdEventDefs.h
 	$(PERL) consts2code \
 	  papiStdEventDefs.h \
-	  Event \
+	  '%s Event = C.PAPI_%s' \
 	  "The following constants represent PAPI's standard event types." \
 	  '_idx' | grep -v PAPI_END > papi-event.go
 

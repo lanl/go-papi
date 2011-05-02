@@ -26,10 +26,8 @@ int initialize_papi_threading (void)
 }
 */
 import "C"
-import (
-	"unsafe"
-	"fmt"
-)
+import "unsafe"
+import "fmt"
 
 
 // An Error can represent any printable error condition.
