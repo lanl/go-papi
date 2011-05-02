@@ -26,8 +26,10 @@ int initialize_papi_threading (void)
 }
 */
 import "C"
-import "fmt"
-import "unsafe"
+import (
+	"unsafe"
+	"fmt"
+)
 
 
 // An Error can represent any printable error condition.
@@ -67,7 +69,8 @@ func (ecode Event) String() (ename string) {
 }
 
 
-// Convert a string to a PAPI event code.
+// Convert a string to a PAPI event code.  This is particularly useful
+// for looking up the event code associated with a PAPI native event.
 func StringToEvent(ename string) (ecode Event, err Errno) {
 	cstring := C.CString(ename)
 	defer C.free(unsafe.Pointer(cstring))
@@ -227,7 +230,9 @@ func (ci *CacheInfo) CacheUsage() MHAttrs {
 }
 
 
-// Describe one level of TLB and one level of cache.
+// Describe one level of TLB and one level of cache.  Note that if
+// multiple TLB page sizes are supported, this will show up as
+// multiple TLBInfo values at the same memory-hierarchy level.
 type MHLevelInfo struct {
 	TLB   []TLBInfo   // Information about all TLBs at the current level of the memory hierarchy
 	Cache []CacheInfo // Information about all caches at the current level of the memory hierarchy
