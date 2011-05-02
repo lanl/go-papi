@@ -28,6 +28,7 @@ int initialize_papi_threading (void)
 import "C"
 import "unsafe"
 import "fmt"
+import "os"
 
 
 // An Error can represent any printable error condition.
@@ -38,6 +39,11 @@ type Error interface {
 
 // An Errno is the PAPI error number.
 type Errno int32
+
+
+// Internally to the package, we test for papi_ok even though we
+// always convert this to nil when returning an os.Error to the user.
+const papi_ok = C.PAPI_OK
 
 
 // Convert a PAPI error number to a string.
@@ -60,7 +66,7 @@ type Event int32
 func (ecode Event) String() (ename string) {
 	cstring := (*C.char)(C.malloc(C.PAPI_MAX_STR_LEN))
 	defer C.free(unsafe.Pointer(cstring))
-	if Errno(C.PAPI_event_code_to_name(C.int(ecode), cstring)) == OK {
+	if Errno(C.PAPI_event_code_to_name(C.int(ecode), cstring)) == papi_ok {
 		ename = C.GoString(cstring)
 	}
 	return
@@ -69,12 +75,14 @@ func (ecode Event) String() (ename string) {
 
 // Convert a string to a PAPI event code.  This is particularly useful
 // for looking up the event code associated with a PAPI native event.
-func StringToEvent(ename string) (ecode Event, err Errno) {
+func StringToEvent(ename string) (ecode Event, err os.Error) {
 	cstring := C.CString(ename)
 	defer C.free(unsafe.Pointer(cstring))
 	var c_ecode C.int
-	if err = Errno(C.PAPI_event_name_to_code(cstring, &c_ecode)); err == OK {
+	if errno := Errno(C.PAPI_event_name_to_code(cstring, &c_ecode)); errno == papi_ok {
 		ecode = Event(c_ecode)
+	} else {
+		err = errno
 	}
 	return
 }

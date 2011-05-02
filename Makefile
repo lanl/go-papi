@@ -41,9 +41,9 @@ papi-errno.go: consts2code $(PAPI_INCDIR)/papi.h
 	  papi.h \
 	  '%s os.Error = Errno(C.PAPI_%s)' \
 	  "The following constants can be returned as Errno values from PAPI functions." \
-	  'PAPI_E.*-\d|PAPI_OK' | \
+	  'PAPI_E.*-\d' | \
 	  awk '{print} /import/ {print "import \"os\""}' | \
-	  sed 's/const/var/' > papi-errno.go
+	  sed 's/const /var /' > papi-errno.go
 
 papi-event.go: consts2code $(PAPI_INCDIR)/papiStdEventDefs.h
 	$(PERL) consts2code \

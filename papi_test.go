@@ -23,7 +23,7 @@ func TestEventNames(t *testing.T) {
 	for _, ecode1 := range eventCodes {
 		ename := ecode1.String()
 		ecode2, err := StringToEvent(ename)
-		if err != OK {
+		if err != nil {
 			t.Fatal(err)
 		}
 		if ecode1 != ecode2 {

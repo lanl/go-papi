@@ -139,7 +139,8 @@ func GetHardwareInfo() HardwareInfo {
 // that all errors are represented as negative Errno values.
 func GetDynMemInfo() (dmem DynMemInfo, err os.Error) {
 	var c_dmem C.PAPI_dmem_info_t
-	if err = Errno(C.PAPI_get_dmem_info(&c_dmem)); err != OK {
+	if errno := Errno(C.PAPI_get_dmem_info(&c_dmem)); errno != papi_ok {
+		err = errno
 		return
 	}
 	dmem = DynMemInfo{
@@ -155,6 +156,5 @@ func GetDynMemInfo() (dmem DynMemInfo, err os.Error) {
 		Stack:         int64(c_dmem.stack),
 		PageSize:      int64(c_dmem.pagesize),
 		PTE:           int64(c_dmem.pte)}
-	err = nil
 	return
 }

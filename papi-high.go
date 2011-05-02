@@ -23,10 +23,11 @@ var NumCounters int
 func Flips() (rtime, ptime float32, flpins int64, mflips float32, err os.Error) {
 	var c_rtime, c_ptime, c_mflips C.float
 	var c_flpins C.longlong
-	err = Errno(C.PAPI_flips(&c_rtime, &c_ptime, &c_flpins, &c_mflips))
-	if err == OK {
+	errno := Errno(C.PAPI_flips(&c_rtime, &c_ptime, &c_flpins, &c_mflips))
+	if errno == papi_ok {
 		rtime, ptime, flpins, mflips = float32(c_rtime), float32(c_ptime), int64(c_flpins), float32(c_mflips)
-		err = nil
+	} else {
+		err = errno
 	}
 	return
 }
@@ -37,10 +38,11 @@ func Flips() (rtime, ptime float32, flpins int64, mflips float32, err os.Error) 
 func Flops() (rtime, ptime float32, flpops int64, mflops float32, err os.Error) {
 	var c_rtime, c_ptime, c_mflops C.float
 	var c_flpops C.longlong
-	err = Errno(C.PAPI_flops(&c_rtime, &c_ptime, &c_flpops, &c_mflops))
-	if err == OK {
+	errno := Errno(C.PAPI_flops(&c_rtime, &c_ptime, &c_flpops, &c_mflops))
+	if errno == papi_ok {
 		rtime, ptime, flpops, mflops = float32(c_rtime), float32(c_ptime), int64(c_flpops), float32(c_mflops)
-		err = nil
+	} else {
+		err = errno
 	}
 	return
 }
@@ -52,10 +54,11 @@ func Flops() (rtime, ptime float32, flpops int64, mflops float32, err os.Error) 
 func Ipc() (rtime, ptime float32, ins int64, ipc float32, err os.Error) {
 	var c_rtime, c_ptime, c_ipc C.float
 	var c_ins C.longlong
-	err = Errno(C.PAPI_ipc(&c_rtime, &c_ptime, &c_ins, &c_ipc))
-	if err == OK {
+	errno := Errno(C.PAPI_ipc(&c_rtime, &c_ptime, &c_ins, &c_ipc))
+	if errno == papi_ok {
 		rtime, ptime, ins, ipc = float32(c_rtime), float32(c_ptime), int64(c_ins), float32(c_ipc)
-		err = nil
+	} else {
+		err = errno
 	}
 	return
 }
@@ -65,8 +68,8 @@ func Ipc() (rtime, ptime float32, ins int64, ipc float32, err os.Error) {
 func StartCounters(evcodes []Event) (err os.Error) {
 	events := (*C.int)(&evcodes[0])
 	numEvents := C.int(len(evcodes))
-	if err = Errno(C.PAPI_start_counters(events, numEvents)); err == OK {
-		err = nil
+	if errno := Errno(C.PAPI_start_counters(events, numEvents)); errno != papi_ok {
+		err = errno
 	}
 	return
 }
@@ -77,8 +80,8 @@ func StartCounters(evcodes []Event) (err os.Error) {
 func ReadCounters(values []int64) (err os.Error) {
 	valuePtr := (*C.longlong)(&values[0])
 	numValues := C.int(len(values))
-	if err = Errno(C.PAPI_read_counters(valuePtr, numValues)); err == OK {
-		err = nil
+	if errno := Errno(C.PAPI_read_counters(valuePtr, numValues)); errno != papi_ok {
+		err = errno
 	}
 	return
 }
@@ -89,8 +92,8 @@ func ReadCounters(values []int64) (err os.Error) {
 func AccumCounters(values []int64) (err os.Error) {
 	valuePtr := (*C.longlong)(&values[0])
 	numValues := C.int(len(values))
-	if err = Errno(C.PAPI_accum_counters(valuePtr, numValues)); err == OK {
-		err = nil
+	if errno := Errno(C.PAPI_accum_counters(valuePtr, numValues)); errno != papi_ok {
+		err = errno
 	}
 	return
 }
@@ -101,8 +104,8 @@ func AccumCounters(values []int64) (err os.Error) {
 func StopCounters(values []int64) (err os.Error) {
 	valuePtr := (*C.longlong)(&values[0])
 	numValues := C.int(len(values))
-	if err = Errno(C.PAPI_stop_counters(valuePtr, numValues)); err == OK {
-		err = nil
+	if errno := Errno(C.PAPI_stop_counters(valuePtr, numValues)); errno != papi_ok {
+		err = errno
 	}
 	return
 }
