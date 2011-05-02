@@ -89,6 +89,11 @@ func StringToEvent(ename string) (ecode Event, err os.Error) {
 
 // ----------------------------------------------------------------------
 
+// An EventSet is a handle to a PAPI-internal set of events.
+type EventSet int32
+
+// ----------------------------------------------------------------------
+
 // An AddressMap stores information about the currently running program.
 type AddressMap struct {
 	Name      string

@@ -15,20 +15,14 @@ import "os"
 func testFlipFlopsHelper(t *testing.T, funcName string, hlFunc func() (float32, float32, int64, float32, os.Error)) {
 	const sleep_usecs = 10000
 	const flops = 100
-	var someValue float64 = 123.456
 	counterValues := make([]int64, 3)
 
-	// Test Flips().
+	// Test the given function().
 	rtime1, ptime1, other1, _, err := hlFunc()
 	if err != nil {
 		t.Fatal(err)
 	}
-	for i := 0; i < flops; i++ {
-		// This should do one floating-point instruction and
-		// one floating-point operation per iteration and be
-		// unlikely for the compiler to optimize away.
-		someValue = someValue * float64(i%7)
-	}
+	performWork(flops)
 	time.Sleep(sleep_usecs * 1000)
 	rtime2, ptime2, other2, _, err := hlFunc()
 	if err != nil {

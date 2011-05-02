@@ -43,6 +43,7 @@ func GetVirtUsec() int64 {
 	return int64(C.PAPI_get_virt_usec())
 }
 
+// ----------------------------------------------------------------------
 
 // Return the executable's address-space information.
 func GetExecutableInfo() ProgramInfo {
@@ -136,7 +137,7 @@ func GetHardwareInfo() HardwareInfo {
 // process's dynamic memory usage.  In addition to returning an
 // overall error code, GetDynMemInfo() can also return an Errno cast
 // to an int64 for any individual field.  To check for that case, note
-// that all errors are represented as negative Errno values.
+// that all errors are represented as negative values.
 func GetDynMemInfo() (dmem DynMemInfo, err os.Error) {
 	var c_dmem C.PAPI_dmem_info_t
 	if errno := Errno(C.PAPI_get_dmem_info(&c_dmem)); errno != papi_ok {
@@ -156,5 +157,108 @@ func GetDynMemInfo() (dmem DynMemInfo, err os.Error) {
 		Stack:         int64(c_dmem.stack),
 		PageSize:      int64(c_dmem.pagesize),
 		PTE:           int64(c_dmem.pte)}
+	return
+}
+
+// ----------------------------------------------------------------------
+
+// Allocate a new event set and return a handler to it.
+func CreateEventSet() (es EventSet, err os.Error) {
+	es = C.PAPI_NULL;
+	if errno := Errno(C.PAPI_create_eventset((*C.int)(&es))); errno != papi_ok {
+		err = errno
+	}
+	return
+}
+
+
+// Add an event to an event set.
+func (es EventSet) AddEvent(ecode Event) (err os.Error) {
+	if errno := Errno(C.PAPI_add_event(C.int(es), C.int(ecode))); errno != papi_ok {
+		err = errno
+	}
+	return
+}
+
+
+// Add multiple events to an event set.
+func (es EventSet) AddEvents(ecodes []Event) (err os.Error) {
+	if errno := Errno(C.PAPI_add_events(C.int(es), (*C.int)(&ecodes[0]), C.int(len(ecodes)))); errno != papi_ok {
+		err = errno
+	}
+	return
+}
+
+
+// Return the number of events in an event set.
+func (es EventSet) NumEvents() (numEvents int, err os.Error) {
+	if cNumEvents := C.PAPI_num_events(C.int(es)); cNumEvents >= 0 {
+		numEvents = int(cNumEvents)
+	} else {
+		err = Errno(cNumEvents)
+	}
+	return
+}
+
+
+// Start counting every event in an event set.
+func (es EventSet) Start() (err os.Error) {
+	if errno := Errno(C.PAPI_start(C.int(es))); errno != papi_ok {
+		err = errno
+	}
+	return
+}
+
+
+// Stop counting events and return the final counter values.
+func (es EventSet) Stop(values []int64) os.Error {
+	numEvents, err := es.NumEvents()
+	if err != nil {
+		return err
+	}
+	if len(values) < numEvents {
+		return EBUF
+	}
+	if errno := Errno(C.PAPI_stop(C.int(es), (*C.longlong)(&values[0]))); errno != papi_ok {
+		return errno
+	}
+	return nil
+}
+
+
+// Remove an event from an event set.
+func (es EventSet) RemoveEvent(ecode Event) (err os.Error) {
+	if errno := Errno(C.PAPI_remove_event(C.int(es), C.int(ecode))); errno != papi_ok {
+		err = errno
+	}
+	return
+}
+
+
+// Remove multiple events from an event set.
+func (es EventSet) RemoveEvents(ecodes []Event) (err os.Error) {
+	if errno := Errno(C.PAPI_remove_events(C.int(es), (*C.int)(&ecodes[0]), C.int(len(ecodes)))); errno != papi_ok {
+		err = errno
+	}
+	return
+}
+
+
+// Remove all events from an event set and stop counting events in the
+// event set.  CleanupEventSet() can not be called if the event set
+// has not been stopped.
+func (es EventSet) CleanupEventSet() (err os.Error) {
+	if errno := Errno(C.PAPI_cleanup_eventset(C.int(es))); errno != papi_ok {
+		err = errno
+	}
+	return
+}
+
+
+// Deallocate the memory associated with an empty event set.
+func (es *EventSet) DestroyEventSet() (err os.Error) {
+	if errno := Errno(C.PAPI_destroy_eventset((*C.int)(es))); errno != papi_ok {
+		err = errno
+	}
 	return
 }

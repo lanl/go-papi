@@ -7,6 +7,7 @@ package papi
 
 import "testing"
 import "time"
+import "os"
 
 
 // Ensure that the real-time cycle counter is strictly increasing.
@@ -101,5 +102,46 @@ func TestHardwareInfo(t *testing.T) {
 	}
 	if len(hw.MemHierarchy) == 0 {
 		t.Fatal("MemHierarchy == []")
+	}
+}
+
+
+// Test various events in an EventSet's lifetime.  This test is
+// derived from examples/PAPI_add_remove_events.c in the PAPI
+// distribution.
+func TestEventSet(t *testing.T) {
+	const flops = 1000
+
+	// Start counting a few events.
+	var err os.Error
+	var events EventSet
+	if events, err = CreateEventSet(); err != nil {
+		t.Fatal(err)
+	}
+	if err = events.AddEvents([]Event{TOT_INS, TOT_CYC}); err != nil {
+		t.Fatal(err)
+	}
+	if numEvents, err := events.NumEvents(); err != nil {
+		t.Fatal(err)
+	} else if numEvents != 2 {
+		t.Fatalf("Expected 2 events, saw %d events", numEvents)
+	}
+	if err = events.Start(); err != nil {
+		t.Fatal(err)
+	}
+
+	// Kill some time.
+	performWork(flops)
+
+	// Ensure we counted at least a minimum number of flops.
+	values := make([]int64, 2)
+	if err = events.Stop(values); err != nil {
+		t.Fatal(err)
+	}
+	if err = events.RemoveEvents([]Event{TOT_CYC, TOT_INS}); err != nil {
+		t.Fatal(err)
+	}
+	if err = events.DestroyEventSet(); err != nil {
+		t.Fatal(err)
 	}
 }
