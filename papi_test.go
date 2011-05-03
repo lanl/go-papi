@@ -46,3 +46,34 @@ func TestEventNames(t *testing.T) {
 		}
 	}
 }
+
+
+// Ensure that we can map event modifiers to strings.
+func TestEventModifiers(t *testing.T) {
+	// papi.go makes some assumptions about a couple of PAPI's
+	// event-modifier values.  Verify that these assumptions are
+	// correct.
+	if int(ENUM_EVENTS) != 0 {
+		t.Fatalf("Expected ENUM_EVENTS to be 0, but it's actually %d", int(ENUM_EVENTS))
+	}
+	if int(ENUM_FIRST) != 1 {
+		t.Fatalf("Expected ENUM_FIRST to be 1, but it's actually %d", int(ENUM_FIRST))
+	}
+	if int(PRESET_ENUM_AVAIL) != 2 {
+		t.Fatalf("Expected PRESET_ENUM_AVAIL to be 2, but it's actually %d", int(PRESET_ENUM_AVAIL))
+	}
+
+	// Try mapping a few names to strings and verifying that we
+	// get what we expected to get.
+	expectedToActual := map[EventModifier]string{
+		ENUM_EVENTS:                     "PAPI_ENUM_EVENTS",
+		ENUM_FIRST:                      "PAPI_ENUM_FIRST",
+		PRESET_ENUM_AVAIL:               "PAPI_PRESET_ENUM_AVAIL",
+		PRESET_BIT_CACH | PRESET_BIT_L3: "PAPI_PRESET_BIT_CACH|PAPI_PRESET_BIT_L3"}
+	for emod, str := range expectedToActual {
+		if emod.String() != str {
+			t.Fatalf("Expected to map %d to \"%s\" but instead got \"%s\"",
+				int32(emod), str, emod.String())
+		}
+	}
+}

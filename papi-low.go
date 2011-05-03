@@ -307,8 +307,8 @@ func GetEventInfo(ev Event) (info EventInfo, err os.Error) {
 		name[i] = C.GoString(&c_info.name[i][0])
 	}
 	info = EventInfo{
-		EventCode:  uint32(c_info.event_code),
-		EventType:  uint32(c_info.event_type),
+		EventCode:  Event(c_info.event_code),
+		EventType:  EventModifier(c_info.event_type),
 		Symbol:     C.GoString(&c_info.symbol[0]),
 		ShortDescr: C.GoString(&c_info.short_descr[0]),
 		LongDescr:  C.GoString(&c_info.long_descr[0]),

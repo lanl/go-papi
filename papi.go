@@ -89,22 +89,58 @@ func StringToEvent(ename string) (ecode Event, err os.Error) {
 
 // An EventInfo textually describes a PAPI event.
 type EventInfo struct {
-	EventCode  uint32   // Preset (0x8xxxxxxx) or native (0x4xxxxxxx) event code
-	EventType  uint32   // Event type or category for preset events only
-	Symbol     string   // Name of the event
-	ShortDescr string   // A description suitable for use as a label, typically only implemented for preset events
-	LongDescr  string   // A longer description of the event (sentence to paragraph length)
-	Derived    string   // Name of the derived type (for presets, usually NOT_DERIVED; for native events, empty string)
-	Postfix    string   // String containing postfix operations; only defined for preset events of derived type DERIVED_POSTFIX */
-	Code       []uint32 // Array of values that further describe the event (for presets, native event_code values; for native events, register values for event programming)
-	Name       []string // Names of code terms (for presets, native event names, as in Symbol, above; for native events, descriptive strings for each register value presented in the code array)
-	Note       string   // An optional developer note supplied with a preset event to delineate platform-specific anomalies or restrictions
+	EventCode  Event         // Preset (0x8xxxxxxx) or native (0x4xxxxxxx) event code
+	EventType  EventModifier // Event type or category (for preset events only)
+	Symbol     string        // Name of the event
+	ShortDescr string        // A description suitable for use as a label, typically only implemented for preset events
+	LongDescr  string        // A longer description of the event (sentence to paragraph length)
+	Derived    string        // Name of the derived type (for presets, usually NOT_DERIVED; for native events, empty string)
+	Postfix    string        // String containing postfix operations; only defined for preset events of derived type DERIVED_POSTFIX */
+	Code       []uint32      // Array of values that further describe the event (for presets, native event_code values; for native events, register values for event programming)
+	Name       []string      // Names of code terms (for presets, native event names, as in Symbol, above; for native events, descriptive strings for each register value presented in the code array)
+	Note       string        // An optional developer note supplied with a preset event to delineate platform-specific anomalies or restrictions
 }
 
 
 // An EventModifier filters by characteristic the set of events
-// returned by EnumEvents().
+// returned by EnumEvents().  It can be ENUM_EVENTS to match all
+// events, PRESET_ENUM_AVAIL to match the available preset events,
+// NTV_* to match particular sets of native events, or a bitwise-or of
+// one or more PRESET_BIT_* EventModifier constants to match by
+// characteristic.
 type EventModifier int32
+
+
+// Convert an EventModifier to a string.  Caveat: The result is
+// meaningful only for PAPI preset events.
+func (emod EventModifier) String() string {
+	// Handle a few non-masking events specially.
+	switch emod {
+	case ENUM_EVENTS:
+		return "PAPI_ENUM_EVENTS"
+	case ENUM_FIRST:
+		return "PAPI_ENUM_FIRST"
+	case PRESET_ENUM_AVAIL:
+		return "PAPI_PRESET_ENUM_AVAIL"
+	}
+
+	// Handle masking events by concatenating their strings.
+	result := ""
+	unnamedBits := EventModifier(0)
+	for b := uint32(2); b < 31; b++ {
+		if maskBit := emod & (1 << b); maskBit != 0 {
+			if maskName, found := presetBitToString[maskBit]; found {
+				result += "|" + maskName
+			} else {
+				unnamedBits |= maskBit
+			}
+		}
+	}
+	if unnamedBits != 0 {
+		result += fmt.Sprintf("|0x%x", uint32(unnamedBits))
+	}
+	return result[1:]
+}
 
 
 // An EventMask filters by defining group (preset or native) the set
