@@ -18,6 +18,7 @@ int get_cache_type(PAPI_mh_cache_info_t *c) {return c->type;}
 import "C"
 import "unsafe"
 import "os"
+import "container/vector"
 
 
 // Return the real-time counter's value in clock cycles.
@@ -164,7 +165,7 @@ func GetDynMemInfo() (dmem DynMemInfo, err os.Error) {
 
 // Allocate a new event set and return a handler to it.
 func CreateEventSet() (es EventSet, err os.Error) {
-	es = C.PAPI_NULL;
+	es = C.PAPI_NULL
 	if errno := Errno(C.PAPI_create_eventset((*C.int)(&es))); errno != papi_ok {
 		err = errno
 	}
@@ -260,5 +261,61 @@ func (es *EventSet) DestroyEventSet() (err os.Error) {
 	if errno := Errno(C.PAPI_destroy_eventset((*C.int)(es))); errno != papi_ok {
 		err = errno
 	}
+	return
+}
+
+// ----------------------------------------------------------------------
+
+// Enumerate PAPI preset or native events.  The corresponding C
+// interface, PAPI_enum_event(), returns a single event at a time.
+// For convenience, we return a slice of all events.
+func EnumEvents(emask EventMask, modifier EventModifier) (matches []Event, err os.Error) {
+	c_event := C.int(emask)
+	c_mod := C.int(modifier)
+	var eventVec vector.Vector
+	var errno Errno
+
+	// Store the complete list of events in a Vector.
+	for errno = Errno(C.PAPI_enum_event(&c_event, C.int(ENUM_FIRST))); errno == papi_ok; errno = Errno(C.PAPI_enum_event(&c_event, c_mod)) {
+		eventVec.Push(Event(c_event))
+	}
+	if errno != ENOEVNT {
+		err = errno
+		return
+	}
+
+	// Convert the Vector to a slice of Events, which we'll return.
+	matches = make([]Event, eventVec.Len())
+	for i, iface := range eventVec {
+		matches[i] = iface.(Event)
+	}
+	return
+}
+
+
+// Return descriptive information about an event.
+func GetEventInfo(ev Event) (info EventInfo, err os.Error) {
+	var c_info C.PAPI_event_info_t
+	if errno := Errno(C.PAPI_get_event_info(C.int(ev), &c_info)); errno != papi_ok {
+		err = errno
+		return
+	}
+	code := make([]uint32, c_info.count)
+	name := make([]string, c_info.count)
+	for i := 0; i < int(c_info.count); i++ {
+		code[i] = uint32(c_info.code[i])
+		name[i] = C.GoString(&c_info.name[i][0])
+	}
+	info = EventInfo{
+		EventCode:  uint32(c_info.event_code),
+		EventType:  uint32(c_info.event_type),
+		Symbol:     C.GoString(&c_info.symbol[0]),
+		ShortDescr: C.GoString(&c_info.short_descr[0]),
+		LongDescr:  C.GoString(&c_info.long_descr[0]),
+		Derived:    C.GoString(&c_info.derived[0]),
+		Postfix:    C.GoString(&c_info.postfix[0]),
+		Code:       code,
+		Name:       name,
+		Note:       C.GoString(&c_info.note[0])}
 	return
 }

@@ -145,3 +145,54 @@ func TestEventSet(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+
+// Ensure that GetEventInfo returns non-empty data.
+func TestGetEventInfo(t *testing.T) {
+	info, err := GetEventInfo(TOT_INS)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Symbol != "PAPI_TOT_INS" {
+		t.Fatal("Expected PAPI_TOT_INS; saw %s", info.Symbol)
+	}
+	if info.ShortDescr == "" || info.LongDescr == "" {
+		t.Fatal("Event description is empty")
+	}
+}
+
+
+// Ensure that enumerating events gives us at least one event.
+func TestEnumEvents(t *testing.T) {
+	var eventList []Event
+	var err os.Error
+
+	// Look for preset events.
+	eventList, err = EnumEvents(PRESET_MASK, ENUM_EVENTS)
+	if err != nil {
+		t.Fatal(err)
+	}
+	numPresets := len(eventList)
+	if numPresets == 0 {
+		t.Fatal("List of all preset events is empty")
+	}
+	eventList, err = EnumEvents(PRESET_MASK, PRESET_ENUM_AVAIL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(eventList) == 0 {
+		t.Fatal("List of available preset events is empty")
+	}
+	if len(eventList) > numPresets {
+		t.Fatal("More preset events are available than exist in toto")
+	}
+
+	// Look for native events.
+	eventList, err = EnumEvents(NATIVE_MASK|ComponentMask(0), ENUM_EVENTS)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(eventList) == 0 {
+		t.Fatal("List of native events is empty")
+	}
+}

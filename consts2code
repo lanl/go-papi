@@ -7,16 +7,26 @@
 # By Scott Pakin <pakin@lanl.gov>             #
 ###############################################
 
+use Getopt::Long;
 use File::Basename;
 use warnings;
 use strict;
 
 # Parse the command line.
-die "Usage: $0 <filename.h> [<printf_format> <comment> [<regex>]]\n" if $#ARGV < 0;
+my $usagestr= "Usage: $0 [--format=<printf_format>] [--comment=<comment>] [--keep=<regex>...] [--ignore=<regex>...] [--[no-]ifdef] <filename.h>\n";
+my @in_regexes;    # Keep only lines that match all of these regular expressions
+my @out_regexes;   # Discard lines that match any of these regular expressions
+my $comment;       # Comment string for block of constants
+my $format;        # printf format string to output each line; takes two "%s"es
+my $ifdef = 1;     # If true, keep only lines that aren't #ifdef'd out; falsee=keep all lines
+GetOptions("format=s"  => \$format,
+	   "comment=s" => \$comment,
+	   "ifdef!"    => \$ifdef,
+	   "keep=s"    => \@in_regexes,
+	   "ignore=s"  => \@out_regexes)
+    || die $usagestr;
+die $usagestr if $#ARGV < 0;
 my $hfilename = $ARGV[0];
-my $format = $ARGV[1];
-my $comment = $ARGV[2];
-my $regex = $ARGV[3] || ".";
 
 # Find the header file by passing it to the C preprocessor.  If we
 # were given only a header file, output it and exit.
@@ -31,7 +41,7 @@ while (my $oneline = <CPP>) {
 close CPP;
 die "${0}: cpp failed to find $hfilename\n" if !defined $full_hfilename;
 $hfilename = $full_hfilename;
-if ($#ARGV < 2) {
+if (!defined $comment || !defined $format) {
     print $hfilename, "\n";
     exit 0;
 }
@@ -39,25 +49,39 @@ if ($#ARGV < 2) {
 # Find all commented PAPI_* definitions.
 my %def2comment;
 open(HFILE, "<$hfilename") || die "open: $!\n";
-while (my $oneline = <HFILE>) {
-    next if $oneline !~ $regex;
-    next if $oneline !~ m,^\#define PAPI_([_A-Z0-9]+)\s+.*/\*(?:\*<)?\s*(.*?)\s*\*/,;
-    $def2comment{$1} = $2;
-}
+ READCOMMENTS:
+    while (my $oneline = <HFILE>) {
+	foreach my $regex (@in_regexes) {
+	    next READCOMMENTS if $oneline !~ $regex;
+	}
+	foreach my $regex (@out_regexes) {
+	    next READCOMMENTS if $oneline =~ $regex;
+	}
+	next if $oneline !~ m,^(\S*)\s+PAPI_([_A-Z0-9]+)\b.*/\*(?:\*<)?\s*(.*?)\s*\*/,;
+	$def2comment{$2} = $3;
+    }
 close HFILE;
 
 # Run the .h file through the C preprocessor to filter away
 # definitions that are commented out.
-my %all_def2comments = %def2comment;
-%def2comment = ();
-open(CPP, "cpp -dM $hfilename|") || die "open: $!\n";
-while (my $oneline = <CPP>) {
-    next if $oneline !~ $regex;
-    next if $oneline !~ m,^\#define PAPI_([_A-Z0-9]+)\s+,;
-    next if !defined $all_def2comments{$1};
-    $def2comment{$1} = $all_def2comments{$1};
+if ($ifdef) {
+    my %all_def2comments = %def2comment;
+    %def2comment = ();
+    open(CPP, "cpp -dM $hfilename|") || die "open: $!\n";
+  READCPPDEFS:
+    while (my $oneline = <CPP>) {
+        foreach my $regex (@in_regexes) {
+	    next READCPPDEFS if $oneline !~ $regex;
+        }
+        foreach my $regex (@out_regexes) {
+	    next READCPPDEFS if $oneline =~ $regex;
+        }
+        next if $oneline !~ m,^(\S*)\s+PAPI_([_A-Z0-9]+)\b,;
+        next if !defined $all_def2comments{$2};
+        $def2comment{$2} = $all_def2comments{$2};
+    }
+    close CPP || die "close: $!\n";
 }
-close CPP || die "close: $!\n";
 
 # Write the package contents.
 my $hfilebase = basename $hfilename;

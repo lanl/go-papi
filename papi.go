@@ -87,7 +87,46 @@ func StringToEvent(ename string) (ecode Event, err os.Error) {
 	return
 }
 
-// ----------------------------------------------------------------------
+// An EventInfo textually describes a PAPI event.
+type EventInfo struct {
+	EventCode  uint32   // Preset (0x8xxxxxxx) or native (0x4xxxxxxx) event code
+	EventType  uint32   // Event type or category for preset events only
+	Symbol     string   // Name of the event
+	ShortDescr string   // A description suitable for use as a label, typically only implemented for preset events
+	LongDescr  string   // A longer description of the event (sentence to paragraph length)
+	Derived    string   // Name of the derived type (for presets, usually NOT_DERIVED; for native events, empty string)
+	Postfix    string   // String containing postfix operations; only defined for preset events of derived type DERIVED_POSTFIX */
+	Code       []uint32 // Array of values that further describe the event (for presets, native event_code values; for native events, register values for event programming)
+	Name       []string // Names of code terms (for presets, native event names, as in Symbol, above; for native events, descriptive strings for each register value presented in the code array)
+	Note       string   // An optional developer note supplied with a preset event to delineate platform-specific anomalies or restrictions
+}
+
+
+// An EventModifier filters by characteristic the set of events
+// returned by EnumEvents().
+type EventModifier int32
+
+
+// An EventMask filters by defining group (preset or native) the set
+// of events returned by EnumEvents().
+type EventMask int32
+
+
+// The following may be used individually or ORed together when passed
+// to EnumEvents().
+const (
+	PRESET_MASK EventMask = C.PAPI_PRESET_MASK // Predefined events only
+	NATIVE_MASK EventMask = C.PAPI_NATIVE_MASK // Native events only
+)
+
+
+// Native events associated with a particular PAPI component can be
+// selected by EnumEvents() by ORing NATIVE_MASK with a component
+// mask.
+func ComponentMask(cid int) EventMask {
+	return EventMask(0x3c000000 & (cid << 26))
+}
+
 
 // An EventSet is a handle to a PAPI-internal set of events.
 type EventSet int32
