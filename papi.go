@@ -419,6 +419,24 @@ type ComponentInfo struct {
 
 // ----------------------------------------------------------------------
 
+// The following debug levels can be passed to SetDebugLevel().
+const (
+	QUIET      = C.PAPI_QUIET      // Option to turn off automatic reporting of return codes < 0 to stderr
+	VERB_ECOND = C.PAPI_VERB_ECONT // Option to automatically report any return codes < 0 to stderr and continue
+	VERB_ESTOP = C.PAPI_VERB_ESTOP // Option to automatically report any return codes < 0 to stderr and exit
+)
+
+
+// Set the PAPI library's debug level.
+func SetDebugLevel(level int) (err os.Error) {
+	if errno := Errno(C.PAPI_set_debug(C.int(level))); errno != papi_ok {
+		err = errno
+	}
+	return
+}
+
+// ----------------------------------------------------------------------
+
 // Before we do anything else we need to initialize the PAPI library.
 func init() {
 	// Initialize the library proper.
