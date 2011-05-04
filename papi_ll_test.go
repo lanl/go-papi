@@ -234,7 +234,12 @@ func TestEnumEvents(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(eventList) == 0 {
-		t.Fatal("List of native events is empty")
+	var info ComponentInfo
+	if info, err = GetComponentInfo(0); err != nil {
+		t.Fatal(err)
+	}
+	if len(eventList) != info.NumNativeEvents {
+		t.Fatalf("Expected to see %d native events but saw %d native events",
+			info.NumNativeEvents, len(eventList))
 	}
 }

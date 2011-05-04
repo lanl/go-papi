@@ -368,6 +368,57 @@ type DynMemInfo struct {
 
 // ----------------------------------------------------------------------
 
+// Support for different "components" -- sets of counters -- can be
+// compiled into the PAPI library.  A ComponentInfo structure
+// describes a wealth of information about an individual component.
+type ComponentInfo struct {
+	Name                   string // Name of the substrate we're using, usually CVS RCS Id
+	Version                string // Version of this substrate, usually CVS Revision
+	SupportVersion         string // Version of the support library
+	KernelVersion          string // Version of the kernel PMC support driver
+	CmpIdx                 int    // Index into the vector array for this component; set at init time
+	NumCntrs               int    // Number of hardware counters the substrate supports
+	NumMpxCntrs            int    // Number of hardware counters the substrate or PAPI can multiplex supports
+	NumPresetEvents        int    // Number of preset events the substrate supports
+	NumNativeEvents        int    // Number of native events the substrate supports
+	DefaultDomain          int    // The default domain when this substrate is used
+	AvailableDomains       int    // Available domains
+	DefaultGranularity     int    // The default granularity when this substrate is used
+	AvailableGranularities int    // Available granularities
+	ItimerSig              int    // Signal number used by the multiplex timer, 0 if not
+	ItimerNum              int    // Number of the itimer used by mpx and overflow/profile emulation
+	ItimerNs               int    // ns between mpx switching and overflow/profile emulation
+	ItimerResNs            int    // ns of resolution of itimer
+	HardwareIntrSig        int    // Signal used by hardware to deliver PMC events
+	ClockTicks             int    // Clock ticks per second
+	OpcodeMatchWidth       int    // Width of opcode matcher if exists, 0 if not
+	OSVersion              int    // Currently running kernel version
+	HardwareIntr           bool   // HW overflow intr, does not need to be emulated in software
+	PreciseIntr            bool   // Performance interrupts happen precisely
+	POSIX1bTimers          bool   // Using POSIX 1b interval timers (timer_create) instead of setitimer
+	KernelProfile          bool   // Has kernel profiling support (buffered interrupts or sprofil-like)
+	KernelMultiplex        bool   // In kernel multiplexing
+	DataAddressRange       bool   // Supports data address range limiting
+	InstrAddressRange      bool   // Supports instruction address range limiting
+	FastCounterRead        bool   // Supports a user level PMC read instruction
+	FastRealTimer          bool   // Supports a fast real timer
+	FastVirtualTimer       bool   // Supports a fast virtual timer
+	Attach                 bool   // Supports attach
+	AttachMustPtrace       bool   // Attach must first ptrace and stop the thread/process
+	CPU                    bool   // Supports specifying cpu number to use with event set
+	Inherit                bool   // Supports child processes inheriting parents counters
+	EdgeDetect             bool   // Supports edge detection on events
+	Invert                 bool   // Supports invert detection on events
+	ProfileEAR             bool   // Supports data/instr/tlb miss address sampling
+	CntrGroups             bool   // Underlying hardware uses counter groups (e.g. POWER5)
+	CntrUmasks             bool   // Counters have unit masks
+	CntrIEAREvents         bool   // Counters support instr event addr register
+	CntrDEAREvents         bool   // Counters support data event addr register
+	CntrOPCMEvents         bool   // Counter events support opcode matching
+}
+
+// ----------------------------------------------------------------------
+
 // Before we do anything else we need to initialize the PAPI library.
 func init() {
 	// Initialize the library proper.

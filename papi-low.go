@@ -10,10 +10,36 @@ package papi
 #include <stdio.h>
 #include <papi.h>
 
-// Because "type" is a keyword in Go, we use some C wrappers to return
-// the type field from various structures.
-int get_tlb_type(PAPI_mh_tlb_info_t *t) {return t->type;}
-int get_cache_type(PAPI_mh_cache_info_t *c) {return c->type;}
+// As of this writing, cgo doesn't seem to support bit fields.  We
+// therefore have to use a wrapper function to access the bits in a
+// PAPI_component_info_t.
+void get_component_bits(PAPI_component_info_t *info, int *bitfields) 
+{
+  int i = 0;
+  bitfields[i++] = info->hardware_intr;
+  bitfields[i++] = info->precise_intr;
+  bitfields[i++] = info->posix1b_timers;
+  bitfields[i++] = info->kernel_profile;
+  bitfields[i++] = info->kernel_multiplex;
+  bitfields[i++] = info->data_address_range;
+  bitfields[i++] = info->instr_address_range;
+  bitfields[i++] = info->fast_counter_read;
+  bitfields[i++] = info->fast_real_timer;
+  bitfields[i++] = info->fast_virtual_timer;
+  bitfields[i++] = info->attach;
+  bitfields[i++] = info->attach_must_ptrace;
+  bitfields[i++] = info->cpu;
+  bitfields[i++] = info->inherit;
+  bitfields[i++] = info->edge_detect;
+  bitfields[i++] = info->invert;
+  bitfields[i++] = info->profile_ear;
+  bitfields[i++] = info->cntr_groups;
+  bitfields[i++] = info->cntr_umasks;
+  bitfields[i++] = info->cntr_IEAR_events;
+  bitfields[i++] = info->cntr_DEAR_events;
+  bitfields[i++] = info->cntr_OPCM_events;
+}
+
 */
 import "C"
 import "unsafe"
@@ -42,20 +68,6 @@ func GetVirtCyc() int64 {
 // Return the virtual-time counter's value in microseconds.
 func GetVirtUsec() int64 {
 	return int64(C.PAPI_get_virt_usec())
-}
-
-
-// Return the number of counting components included in the PAPI
-// library.
-func GetNumComponents() int {
-	return int(C.PAPI_num_components())
-}
-
-
-// Return the number of counters present in the specified component.
-// By convention, component 0 is always the CPU.
-func GetNumCounters(cidx int) int {
-	return int(C.PAPI_num_cmp_hwctrs(C.int(cidx)))
 }
 
 // ----------------------------------------------------------------------
@@ -97,7 +109,7 @@ func GetHardwareInfo() HardwareInfo {
 		var validTLBLevels int
 		for i, _ := range tlbData {
 			ctlb := cLevel.tlb[i]
-			tlbData[i].Type = MHAttrs(C.get_tlb_type(&ctlb))
+			tlbData[i].Type = MHAttrs(ctlb._type)
 			if tlbData[i].Type == MH_TYPE_EMPTY {
 				break
 			}
@@ -113,7 +125,7 @@ func GetHardwareInfo() HardwareInfo {
 		var validCacheLevels int
 		for i, _ := range cacheData {
 			ccache := cLevel.cache[i]
-			cacheData[i].Type = MHAttrs(C.get_cache_type(&ccache))
+			cacheData[i].Type = MHAttrs(ccache._type)
 			if cacheData[i].Type == MH_TYPE_EMPTY {
 				break
 			}
@@ -328,8 +340,8 @@ func (es EventSet) SetMultiplex() (err os.Error) {
 // is added.  This function is useful to explicitly bind an event set
 // to a component before setting component related options (e.g., via
 // SetMultiplex()).
-func (es EventSet) AssignComponent(cidx int) (err os.Error) {
-	if errno := Errno(C.PAPI_assign_eventset_component(C.int(es), C.int(cidx))); errno != papi_ok {
+func (es EventSet) AssignComponent(idx int) (err os.Error) {
+	if errno := Errno(C.PAPI_assign_eventset_component(C.int(es), C.int(idx))); errno != papi_ok {
 		err = errno
 	}
 	return
@@ -388,5 +400,78 @@ func GetEventInfo(ev Event) (info EventInfo, err os.Error) {
 		Code:       code,
 		Name:       name,
 		Note:       C.GoString(&c_info.note[0])}
+	return
+}
+
+// ----------------------------------------------------------------------
+
+// Return the number of counting components included in the PAPI
+// library.
+func GetNumComponents() int {
+	return int(C.PAPI_num_components())
+}
+
+
+// Return the number of counters present in the specified component.
+// By convention, component 0 is the CPU.
+func GetNumCounters(idx int) int {
+	return int(C.PAPI_num_cmp_hwctrs(C.int(idx)))
+}
+
+
+// Return information about the nth PAPI component.  By convention,
+// component 0 is the CPU.
+func GetComponentInfo(idx int) (info ComponentInfo, err os.Error) {
+	c_info := C.PAPI_get_component_info(C.int(idx))
+	if c_info == nil {
+		err = ENOCMP
+		return
+	}
+	bitfields := make([]C.int, 22)
+	C.get_component_bits(c_info, &bitfields[0])
+	info = ComponentInfo{
+		Name:                   C.GoString(&c_info.name[0]),
+		Version:                C.GoString(&c_info.version[0]),
+		SupportVersion:         C.GoString(&c_info.support_version[0]),
+		KernelVersion:          C.GoString(&c_info.kernel_version[0]),
+		CmpIdx:                 int(c_info.CmpIdx),
+		NumCntrs:               int(c_info.num_cntrs),
+		NumMpxCntrs:            int(c_info.num_mpx_cntrs),
+		NumPresetEvents:        int(c_info.num_preset_events),
+		NumNativeEvents:        int(c_info.num_native_events),
+		DefaultDomain:          int(c_info.default_domain),
+		AvailableDomains:       int(c_info.available_domains),
+		DefaultGranularity:     int(c_info.default_granularity),
+		AvailableGranularities: int(c_info.available_granularities),
+		ItimerSig:              int(c_info.itimer_sig),
+		ItimerNum:              int(c_info.itimer_num),
+		ItimerNs:               int(c_info.itimer_ns),
+		ItimerResNs:            int(c_info.itimer_res_ns),
+		HardwareIntrSig:        int(c_info.hardware_intr_sig),
+		ClockTicks:             int(c_info.clock_ticks),
+		OpcodeMatchWidth:       int(c_info.opcode_match_width),
+		OSVersion:              int(c_info.os_version),
+		HardwareIntr:           bitfields[0] != 0,
+		PreciseIntr:            bitfields[1] != 0,
+		POSIX1bTimers:          bitfields[2] != 0,
+		KernelProfile:          bitfields[3] != 0,
+		KernelMultiplex:        bitfields[4] != 0,
+		DataAddressRange:       bitfields[5] != 0,
+		InstrAddressRange:      bitfields[6] != 0,
+		FastCounterRead:        bitfields[7] != 0,
+		FastRealTimer:          bitfields[8] != 0,
+		FastVirtualTimer:       bitfields[9] != 0,
+		Attach:                 bitfields[10] != 0,
+		AttachMustPtrace:       bitfields[11] != 0,
+		CPU:                    bitfields[12] != 0,
+		Inherit:                bitfields[13] != 0,
+		EdgeDetect:             bitfields[14] != 0,
+		Invert:                 bitfields[15] != 0,
+		ProfileEAR:             bitfields[16] != 0,
+		CntrGroups:             bitfields[17] != 0,
+		CntrUmasks:             bitfields[18] != 0,
+		CntrIEAREvents:         bitfields[19] != 0,
+		CntrDEAREvents:         bitfields[20] != 0,
+		CntrOPCMEvents:         bitfields[21] != 0}
 	return
 }
