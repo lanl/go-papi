@@ -395,3 +395,13 @@ func init() {
 		panic(Errno(nc).String())
 	}
 }
+
+
+// Enable PAPI support for multiplexed event sets (event sets
+// supporting more counters than what the underlying hardware allows
+// by timesharing counters) at the cost of periodic process
+// interruptions from an interval timer.  InitMultiplex() needs to be
+// called only once per application.
+func InitMultiplex() {
+	C.PAPI_multiplex_init()
+}

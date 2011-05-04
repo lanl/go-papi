@@ -264,6 +264,63 @@ func (es *EventSet) DestroyEventSet() (err os.Error) {
 	return
 }
 
+
+// Return a slice of all of the events in an event set.
+func (es EventSet) ListEvents() (ecodes []Event, err os.Error) {
+	var numEvents int
+	if numEvents, err = es.NumEvents(); err != nil {
+		return
+	}
+	c_ecodes := make([]C.int, numEvents)
+	c_num_events := C.int(numEvents)
+	if errno := Errno(C.PAPI_list_events(C.int(es), &c_ecodes[0], &c_num_events)); errno != papi_ok {
+		err = errno
+		return
+	}
+	ecodes = make([]Event, c_num_events)
+	for i, ev := range c_ecodes {
+		ecodes[i] = Event(ev)
+	}
+	return
+}
+
+
+// Say whether an event set is multiplexed (allows more counters than
+// what the underlying hardware supports).
+func (es EventSet) GetMultiplex() (isMplexed bool, err os.Error) {
+	if retval := C.PAPI_get_multiplex(C.int(es)); Errno(retval) != papi_ok {
+		err = Errno(retval)
+	} else {
+		isMplexed = (retval != 0)
+	}
+	return
+}
+
+
+// Convert an ordinary event set into a multiplexed event set,
+// enabling it to handle more counters than what the underlying
+// hardware supports by timesharing counters.  SetMultiplex() must be
+// called after MultiplexInit() but before Start().
+func (es EventSet) SetMultiplex() (err os.Error) {
+	if errno := Errno(C.PAPI_set_multiplex(C.int(es))); errno != papi_ok {
+		err = errno
+	}
+	return
+}
+
+
+// Assign a component index to an event set.  Event sets are
+// ordinarily automatically bound to components when the first event
+// is added.  This function is useful to explicitly bind an event set
+// to a component before setting component related options (e.g., via
+// SetMultiplex()).
+func (es EventSet) AssignComponent(cidx int) (err os.Error) {
+	if errno := Errno(C.PAPI_assign_eventset_component(C.int(es), C.int(cidx))); errno != papi_ok {
+		err = errno
+	}
+	return
+}
+
 // ----------------------------------------------------------------------
 
 // Enumerate PAPI preset or native events.  The corresponding C

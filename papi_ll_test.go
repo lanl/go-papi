@@ -106,18 +106,12 @@ func TestHardwareInfo(t *testing.T) {
 }
 
 
-// Test various events in an EventSet's lifetime.  This test is
-// derived from examples/PAPI_add_remove_events.c in the PAPI
-// distribution.
-func TestEventSet(t *testing.T) {
+// Do all of the work for TestEventSet and TestMultiplex.
+func useEventSet(t *testing.T, events EventSet) {
 	const flops = 1000
 
 	// Start counting a few events.
 	var err os.Error
-	var events EventSet
-	if events, err = CreateEventSet(); err != nil {
-		t.Fatal(err)
-	}
 	if err = events.AddEvents([]Event{TOT_INS, TOT_CYC}); err != nil {
 		t.Fatal(err)
 	}
@@ -144,6 +138,41 @@ func TestEventSet(t *testing.T) {
 	if err = events.DestroyEventSet(); err != nil {
 		t.Fatal(err)
 	}
+}
+
+
+// Test various events in an EventSet's lifetime.  This test is
+// derived from examples/PAPI_add_remove_events.c in the PAPI
+// distribution.
+func TestEventSet(t *testing.T) {
+	if events, err := CreateEventSet(); err != nil {
+		t.Fatal(err)
+	} else {
+		useEventSet(t, events)
+	}
+}
+
+
+// Test multiplexed event sets.
+func TestMultiplex(t *testing.T) {
+	InitMultiplex()
+	var err os.Error
+	var events EventSet
+	if events, err = CreateEventSet(); err != nil {
+		t.Fatal(err)
+	}
+	if isMulti, err := events.GetMultiplex(); err != nil {
+		t.Fatal(err)
+	} else if isMulti {
+		t.Fatal("Expected a non-multiplexed event set but got a multiplexed one")
+	}
+	if err = events.AssignComponent(0); err != nil {
+		t.Fatal(err)
+	}
+	if err = events.SetMultiplex(); err != nil {
+		t.Fatal(err)
+	}
+	useEventSet(t, events)
 }
 
 
