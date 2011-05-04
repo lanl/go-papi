@@ -44,6 +44,20 @@ func GetVirtUsec() int64 {
 	return int64(C.PAPI_get_virt_usec())
 }
 
+
+// Return the number of counting components included in the PAPI
+// library.
+func GetNumComponents() int {
+	return int(C.PAPI_num_components())
+}
+
+
+// Return the number of counters present in the specified component.
+// By convention, component 0 is always the CPU.
+func GetNumCounters(cidx int) int {
+	return int(C.PAPI_num_cmp_hwctrs(C.int(cidx)))
+}
+
 // ----------------------------------------------------------------------
 
 // Return the executable's address-space information.

@@ -85,6 +85,14 @@ func TestExeInfo(t *testing.T) {
 }
 
 
+// Ensure that PAPI supports at least one counting component (the CPU).
+func TestNumComponents(t *testing.T) {
+	if nc := GetNumComponents(); nc < 1 {
+		t.Fatalf("Expected to see at least 1 counting component but saw only %d", nc)
+	}
+}
+
+
 // Ensure that selected pieces of hardware information are valid.
 func TestHardwareInfo(t *testing.T) {
 	hw := GetHardwareInfo()
@@ -109,6 +117,11 @@ func TestHardwareInfo(t *testing.T) {
 // Do all of the work for TestEventSet and TestMultiplex.
 func useEventSet(t *testing.T, events EventSet) {
 	const flops = 1000
+
+	// Check that we have at least two CPU counters.
+	if GetNumCounters(0) < 2 {
+		t.Fatal("Testing event sets requires a CPU with at least two counters")
+	}
 
 	// Start counting a few events.
 	var err os.Error
