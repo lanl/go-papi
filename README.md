@@ -69,7 +69,8 @@ License
 -------
 
 BSD-ish with a "modifications must be indicated" clause.  See
-<http://github.com/losalamos/go-papi/LICENSE> for the full text.
+<http://github.com/losalamos/go-papi/blob/master/LICENSE> for the full
+text.
 
 
 Author
