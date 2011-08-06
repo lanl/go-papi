@@ -32,14 +32,20 @@ Afterwards, you can follow the usual Go package installation
 procedure:
 
 <pre>
-    git clone http://github.com/losalamos/go-papi
-    cd go-papi
+    git clone http://github.com/losalamos/go-papi $GOROOT/src/pkg/github.com/losalamos/go-papi
+    cd $GOROOT/src/pkg/github.com/losalamos/go-papi
     gomake
     gotest
     gomake install
 </pre>
 
-or simply
+It is then safe to do a `gomake clean`.
+
+At the time of this writing,
+[`goinstall`](http://golang.org/cmd/goinstall/) is unable to install
+packages such as go-papi that require
+[`cgo`](http://golang.org/cmd/cgo/).  If this is ever fixed, the
+preceding steps can be simplified into
 
 <pre>
     goinstall github.com/losalamos/go-papi
@@ -49,15 +55,16 @@ or simply
 Documentation
 -------------
 
-The go-papi API can be viewed with [godoc](http://golang.org/cmd/godoc/),
-for example by running
+The go-papi API can be viewed with
+[`godoc`](http://golang.org/cmd/godoc/), for example by running
 
 <pre>
-    godoc -http=:6060 -path=.
+    godoc -http=:6060
 </pre>
 
-to start a local Web server and viewing the documentation in your
-favorite browser at <http://localhost:6060/pkg/go-papi/>.
+to start a local Web server then viewing the documentation at
+<http://localhost:6060/pkg/github.com/losalamos/go-papi/> in your
+favorite browser.
 
 For code examples, take a look at the `*_test.go` files in the go-papi
 source distribution.  `papi_hl_test.go` utilizes PAPI's high-level
