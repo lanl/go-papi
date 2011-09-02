@@ -55,7 +55,16 @@ preceding steps can be simplified into
 Documentation
 -------------
 
-The go-papi API can be viewed with
+Pre-built documentation for the core part of the go-papi API is
+available online at
+<http://gopkgdoc.appspot.com/pkg/github.com/losalamos/go-papi>,
+courtesy of [GoPkgDoc](http://gopkgdoc.appspot.com/).  Unfortunately,
+the online documentation omits descriptions of all constants,
+variables, etc. that are generated during the build process,
+specifically the list of PAPI events (`papi-event.go`), event
+modifiers (`papi-emod.go`), and error values (`papi-errno.go`).
+
+Once you install go-papi, you can view the complete go-papi API with
 [`godoc`](http://golang.org/cmd/godoc/), for example by running
 
 <pre>
