@@ -41,11 +41,10 @@ PAPI_INCDIR:=$(dir $(shell $(PERL) consts2code papi.h))
 papi-errno.go: consts2code $(PAPI_INCDIR)/papi.h
 	$(PERL) consts2code \
 	    papi.h \
-	    --format='%s os.Error = Errno(C.PAPI_%s)' \
+	    --format='%s error = Errno(C.PAPI_%s)' \
 	    --comment="The following constants can be returned as Errno values from PAPI functions." \
 	    --keep='#define' \
 	    --keep='PAPI_E.*-\d' | \
-	  $(AWK) '{print} /import/ {print "import \"os\""}' | \
 	  sed 's/const /var /' > papi-errno.go
 
 papi-event.go: consts2code $(PAPI_INCDIR)/papiStdEventDefs.h

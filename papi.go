@@ -11,7 +11,6 @@ low-level system information.
 */
 package papi
 
-
 /*
 #cgo LDFLAGS: -lpapi -lpthread
 #include <stdio.h>
@@ -28,23 +27,13 @@ int initialize_papi_threading (void)
 import "C"
 import "unsafe"
 import "fmt"
-import "os"
-
-
-// An Error can represent any printable error condition.
-type Error interface {
-	String() string
-}
-
 
 // An Errno is the PAPI error number.
 type Errno int32
 
-
 // Internally to the package, we test for papi_ok even though we
-// always convert this to nil when returning an os.Error to the user.
+// always convert this to nil when returning an error to the user.
 const papi_ok = C.PAPI_OK
-
 
 // Convert a PAPI error number to a string.
 func (err Errno) String() (errMsg string) {
@@ -56,11 +45,15 @@ func (err Errno) String() (errMsg string) {
 	return
 }
 
+// Make PAPI error numbers implement the error interface.
+func (err Errno) Error() (errMsg string) {
+	return err.String()
+}
+
 // ----------------------------------------------------------------------
 
 // An Event is a PAPI event code, either preset or native.
 type Event int32
-
 
 // Convert a PAPI event code to a string.
 func (ecode Event) String() (ename string) {
@@ -72,10 +65,9 @@ func (ecode Event) String() (ename string) {
 	return
 }
 
-
 // Convert a string to a PAPI event code.  This is particularly useful
 // for looking up the event code associated with a PAPI native event.
-func StringToEvent(ename string) (ecode Event, err os.Error) {
+func StringToEvent(ename string) (ecode Event, err error) {
 	cstring := C.CString(ename)
 	defer C.free(unsafe.Pointer(cstring))
 	var c_ecode C.int
@@ -101,7 +93,6 @@ type EventInfo struct {
 	Note       string        // An optional developer note supplied with a preset event to delineate platform-specific anomalies or restrictions
 }
 
-
 // An EventModifier filters by characteristic the set of events
 // returned by EnumEvents().  It can be ENUM_EVENTS to match all
 // events, PRESET_ENUM_AVAIL to match the available preset events,
@@ -109,7 +100,6 @@ type EventInfo struct {
 // one or more PRESET_BIT_* EventModifier constants to match by
 // characteristic.
 type EventModifier int32
-
 
 // Convert an EventModifier to a string.  Caveat: The result is
 // meaningful only for PAPI preset events.
@@ -142,11 +132,9 @@ func (emod EventModifier) String() string {
 	return result[1:]
 }
 
-
 // An EventMask filters by defining group (preset or native) the set
 // of events returned by EnumEvents().
 type EventMask int32
-
 
 // The following may be used individually or ORed together when passed
 // to EnumEvents().
@@ -155,14 +143,12 @@ const (
 	NATIVE_MASK EventMask = C.PAPI_NATIVE_MASK // Native events only
 )
 
-
 // Native events associated with a particular PAPI component can be
 // selected by EnumEvents() by ORing NATIVE_MASK with a component
 // mask.
 func ComponentMask(cid int) EventMask {
 	return EventMask(0x3c000000 & (cid << 26))
 }
-
 
 // An EventSet is a handle to a PAPI-internal set of events.
 type EventSet int32
@@ -180,7 +166,6 @@ type AddressMap struct {
 	BssEnd    uintptr // End address of program bss segment 
 }
 
-
 // A ProgramInfo is just like an AddressMap but additionally stores
 // the full patname of the executable.
 type ProgramInfo struct {
@@ -193,7 +178,6 @@ type ProgramInfo struct {
 // Attributes of each level of the memory hierarchy are described by
 // MHAttrs.
 type MHAttrs int32
-
 
 // Map MHAttrs cache-type primitives to strings.
 var ctype2string map[MHAttrs]string = map[MHAttrs]string{
@@ -212,7 +196,6 @@ var wpol2string map[MHAttrs]string = map[MHAttrs]string{
 var repl2string map[MHAttrs]string = map[MHAttrs]string{
 	MH_TYPE_LRU:        "LRU",
 	MH_TYPE_PSEUDO_LRU: "PSEUDO_LRU"}
-
 
 // Output memory-hierarchy attributes as a user-friendly string.
 func (a MHAttrs) String() string {
@@ -238,11 +221,9 @@ func (a MHAttrs) String() string {
 	return str
 }
 
-
 // A fully associative cache or TLB is defined to have associativity
 // FullyAssociative.
 const FullyAssociative = C.SHRT_MAX
-
 
 // Describe a translation lookaside buffer's characteristics.
 type TLBInfo struct {
@@ -252,7 +233,6 @@ type TLBInfo struct {
 	Associativity int32   // TLB associativity (0=unknown)
 }
 
-
 // Return the cache type of a TLB (MH_TYPE_EMPTY, MH_TYPE_INST,
 // MH_TYPE_DATA, MH_TYPE_VECTOR, or MH_TYPE_UNIFIED, but not
 // MH_TYPE_TRACE).
@@ -260,12 +240,10 @@ func (ci *TLBInfo) CacheType() MHAttrs {
 	return ci.Type & 0xF
 }
 
-
 // Return the TLB write policy (MH_TYPE_WT or MH_TYPE_WB).
 func (ci *TLBInfo) CacheWritePolicy() MHAttrs {
 	return ci.Type & 0xF0
 }
-
 
 // Return the TLB replacement policy (MH_TYPE_UNKNOWN, MH_TYPE_LRU, or
 // MH_TYPE_PSEUDO_LRU).
@@ -273,12 +251,10 @@ func (ci *TLBInfo) CacheReplacementPolicy() MHAttrs {
 	return ci.Type & 0xF00
 }
 
-
 // Return the TLB usage type (MH_TYPE_TLB, MH_TYPE_PREF, or neither).
 func (ci *TLBInfo) CacheUsage() MHAttrs {
 	return ci.Type & 0xF000
 }
-
 
 // Describe a cache's characteristics.
 type CacheInfo struct {
@@ -289,19 +265,16 @@ type CacheInfo struct {
 	Associativity int32   // Cache associativity (0=unknown)
 }
 
-
 // Return the cache type of a cache (MH_TYPE_EMPTY, MH_TYPE_INST,
 // MH_TYPE_DATA, MH_TYPE_VECTOR, MH_TYPE_TRACE, or MH_TYPE_UNIFIED).
 func (ci *CacheInfo) CacheType() MHAttrs {
 	return ci.Type & 0xF
 }
 
-
 // Return the cache write policy (MH_TYPE_WT or MH_TYPE_WB).
 func (ci *CacheInfo) CacheWritePolicy() MHAttrs {
 	return ci.Type & 0xF0
 }
-
 
 // Return the cache replacement policy (MH_TYPE_UNKNOWN, MH_TYPE_LRU,
 // or MH_TYPE_PSEUDO_LRU).
@@ -309,12 +282,10 @@ func (ci *CacheInfo) CacheReplacementPolicy() MHAttrs {
 	return ci.Type & 0xF00
 }
 
-
 // Return the cache usage type (MH_TYPE_TLB, MH_TYPE_PREF, or neither).
 func (ci *CacheInfo) CacheUsage() MHAttrs {
 	return ci.Type & 0xF000
 }
-
 
 // Describe one level of TLB and one level of cache.  Note that if
 // multiple TLB page sizes are supported, this will show up as
@@ -323,7 +294,6 @@ type MHLevelInfo struct {
 	TLB   []TLBInfo   // Information about all TLBs at the current level of the memory hierarchy
 	Cache []CacheInfo // Information about all caches at the current level of the memory hierarchy
 }
-
 
 // Describe all of the hardware that PAPI knows about.
 type HardwareInfo struct {
@@ -426,9 +396,8 @@ const (
 	VERB_ESTOP = C.PAPI_VERB_ESTOP // Option to automatically report any return codes < 0 to stderr and exit
 )
 
-
 // Set the PAPI library's debug level.
-func SetDebugLevel(level int) (err os.Error) {
+func SetDebugLevel(level int) (err error) {
 	if errno := Errno(C.PAPI_set_debug(C.int(level))); errno != papi_ok {
 		err = errno
 	}
@@ -464,7 +433,6 @@ func init() {
 		panic(Errno(nc).String())
 	}
 }
-
 
 // Enable PAPI support for multiplexed event sets (event sets
 // supporting more counters than what the underlying hardware allows

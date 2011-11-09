@@ -5,7 +5,6 @@
 
 package papi
 
-
 /*
 #include <stdio.h>
 #include <papi.h>
@@ -43,27 +42,21 @@ void get_component_bits(PAPI_component_info_t *info, int *bitfields)
 */
 import "C"
 import "unsafe"
-import "os"
-import "container/vector"
-
 
 // Return the real-time counter's value in clock cycles.
 func GetRealCyc() int64 {
 	return int64(C.PAPI_get_real_cyc())
 }
 
-
 // Return the real-time counter's value in microseconds.
 func GetRealUsec() int64 {
 	return int64(C.PAPI_get_real_usec())
 }
 
-
 // Return the virtual-time counter's value in clock cycles.
 func GetVirtCyc() int64 {
 	return int64(C.PAPI_get_virt_cyc())
 }
-
 
 // Return the virtual-time counter's value in microseconds.
 func GetVirtUsec() int64 {
@@ -92,7 +85,6 @@ func GetExecutableInfo() ProgramInfo {
 			BssStart:  uintptr(unsafe.Pointer(addrInfo.bss_start)),
 			BssEnd:    uintptr(unsafe.Pointer(addrInfo.bss_end))}}
 }
-
 
 // Acquire and return all sorts of information about the underlying hardware.
 func GetHardwareInfo() HardwareInfo {
@@ -159,13 +151,12 @@ func GetHardwareInfo() HardwareInfo {
 		MemHierarchy:  mh}
 }
 
-
 // Acquire and return all sorts of information about the current
 // process's dynamic memory usage.  In addition to returning an
 // overall error code, GetDynMemInfo() can also return an Errno cast
 // to an int64 for any individual field.  To check for that case, note
 // that all errors are represented as negative values.
-func GetDynMemInfo() (dmem DynMemInfo, err os.Error) {
+func GetDynMemInfo() (dmem DynMemInfo, err error) {
 	var c_dmem C.PAPI_dmem_info_t
 	if errno := Errno(C.PAPI_get_dmem_info(&c_dmem)); errno != papi_ok {
 		err = errno
@@ -190,7 +181,7 @@ func GetDynMemInfo() (dmem DynMemInfo, err os.Error) {
 // ----------------------------------------------------------------------
 
 // Allocate a new event set and return a handler to it.
-func CreateEventSet() (es EventSet, err os.Error) {
+func CreateEventSet() (es EventSet, err error) {
 	es = C.PAPI_NULL
 	if errno := Errno(C.PAPI_create_eventset((*C.int)(&es))); errno != papi_ok {
 		err = errno
@@ -198,27 +189,24 @@ func CreateEventSet() (es EventSet, err os.Error) {
 	return
 }
 
-
 // Add an event to an event set.
-func (es EventSet) AddEvent(ecode Event) (err os.Error) {
+func (es EventSet) AddEvent(ecode Event) (err error) {
 	if errno := Errno(C.PAPI_add_event(C.int(es), C.int(ecode))); errno != papi_ok {
 		err = errno
 	}
 	return
 }
 
-
 // Add multiple events to an event set.
-func (es EventSet) AddEvents(ecodes []Event) (err os.Error) {
+func (es EventSet) AddEvents(ecodes []Event) (err error) {
 	if errno := Errno(C.PAPI_add_events(C.int(es), (*C.int)(&ecodes[0]), C.int(len(ecodes)))); errno != papi_ok {
 		err = errno
 	}
 	return
 }
 
-
 // Return the number of events in an event set.
-func (es EventSet) NumEvents() (numEvents int, err os.Error) {
+func (es EventSet) NumEvents() (numEvents int, err error) {
 	if cNumEvents := C.PAPI_num_events(C.int(es)); cNumEvents >= 0 {
 		numEvents = int(cNumEvents)
 	} else {
@@ -227,18 +215,16 @@ func (es EventSet) NumEvents() (numEvents int, err os.Error) {
 	return
 }
 
-
 // Start counting every event in an event set.
-func (es EventSet) Start() (err os.Error) {
+func (es EventSet) Start() (err error) {
 	if errno := Errno(C.PAPI_start(C.int(es))); errno != papi_ok {
 		err = errno
 	}
 	return
 }
 
-
 // Stop counting events and return the final counter values.
-func (es EventSet) Stop(values []int64) os.Error {
+func (es EventSet) Stop(values []int64) error {
 	numEvents, err := es.NumEvents()
 	if err != nil {
 		return err
@@ -252,47 +238,42 @@ func (es EventSet) Stop(values []int64) os.Error {
 	return nil
 }
 
-
 // Remove an event from an event set.
-func (es EventSet) RemoveEvent(ecode Event) (err os.Error) {
+func (es EventSet) RemoveEvent(ecode Event) (err error) {
 	if errno := Errno(C.PAPI_remove_event(C.int(es), C.int(ecode))); errno != papi_ok {
 		err = errno
 	}
 	return
 }
 
-
 // Remove multiple events from an event set.
-func (es EventSet) RemoveEvents(ecodes []Event) (err os.Error) {
+func (es EventSet) RemoveEvents(ecodes []Event) (err error) {
 	if errno := Errno(C.PAPI_remove_events(C.int(es), (*C.int)(&ecodes[0]), C.int(len(ecodes)))); errno != papi_ok {
 		err = errno
 	}
 	return
 }
 
-
 // Remove all events from an event set and stop counting events in the
 // event set.  CleanupEventSet() can not be called if the event set
 // has not been stopped.
-func (es EventSet) CleanupEventSet() (err os.Error) {
+func (es EventSet) CleanupEventSet() (err error) {
 	if errno := Errno(C.PAPI_cleanup_eventset(C.int(es))); errno != papi_ok {
 		err = errno
 	}
 	return
 }
 
-
 // Deallocate the memory associated with an empty event set.
-func (es *EventSet) DestroyEventSet() (err os.Error) {
+func (es *EventSet) DestroyEventSet() (err error) {
 	if errno := Errno(C.PAPI_destroy_eventset((*C.int)(es))); errno != papi_ok {
 		err = errno
 	}
 	return
 }
 
-
 // Return a slice of all of the events in an event set.
-func (es EventSet) ListEvents() (ecodes []Event, err os.Error) {
+func (es EventSet) ListEvents() (ecodes []Event, err error) {
 	var numEvents int
 	if numEvents, err = es.NumEvents(); err != nil {
 		return
@@ -310,10 +291,9 @@ func (es EventSet) ListEvents() (ecodes []Event, err os.Error) {
 	return
 }
 
-
 // Say whether an event set is multiplexed (allows more counters than
 // what the underlying hardware supports).
-func (es EventSet) GetMultiplex() (isMplexed bool, err os.Error) {
+func (es EventSet) GetMultiplex() (isMplexed bool, err error) {
 	if retval := C.PAPI_get_multiplex(C.int(es)); Errno(retval) != papi_ok {
 		err = Errno(retval)
 	} else {
@@ -322,25 +302,23 @@ func (es EventSet) GetMultiplex() (isMplexed bool, err os.Error) {
 	return
 }
 
-
 // Convert an ordinary event set into a multiplexed event set,
 // enabling it to handle more counters than what the underlying
 // hardware supports by timesharing counters.  SetMultiplex() must be
 // called after MultiplexInit() but before Start().
-func (es EventSet) SetMultiplex() (err os.Error) {
+func (es EventSet) SetMultiplex() (err error) {
 	if errno := Errno(C.PAPI_set_multiplex(C.int(es))); errno != papi_ok {
 		err = errno
 	}
 	return
 }
 
-
 // Assign a component index to an event set.  Event sets are
 // ordinarily automatically bound to components when the first event
 // is added.  This function is useful to explicitly bind an event set
 // to a component before setting component related options (e.g., via
 // SetMultiplex()).
-func (es EventSet) AssignComponent(idx int) (err os.Error) {
+func (es EventSet) AssignComponent(idx int) (err error) {
 	if errno := Errno(C.PAPI_assign_eventset_component(C.int(es), C.int(idx))); errno != papi_ok {
 		err = errno
 	}
@@ -352,32 +330,26 @@ func (es EventSet) AssignComponent(idx int) (err os.Error) {
 // Enumerate PAPI preset or native events.  The corresponding C
 // interface, PAPI_enum_event(), returns a single event at a time.
 // For convenience, we return a slice of all events.
-func EnumEvents(emask EventMask, modifier EventModifier) (matches []Event, err os.Error) {
+func EnumEvents(emask EventMask, modifier EventModifier) (matches []Event, err error) {
 	c_event := C.int(emask)
 	c_mod := C.int(modifier)
-	var eventVec vector.Vector
+	matches = make([]Event, 0)
 	var errno Errno
 
 	// Store the complete list of events in a Vector.
 	for errno = Errno(C.PAPI_enum_event(&c_event, C.int(ENUM_FIRST))); errno == papi_ok; errno = Errno(C.PAPI_enum_event(&c_event, c_mod)) {
-		eventVec.Push(Event(c_event))
+		matches = append(matches, Event(c_event))
 	}
 	if errno != ENOEVNT {
+		matches = nil
 		err = errno
 		return
-	}
-
-	// Convert the Vector to a slice of Events, which we'll return.
-	matches = make([]Event, eventVec.Len())
-	for i, iface := range eventVec {
-		matches[i] = iface.(Event)
 	}
 	return
 }
 
-
 // Return descriptive information about an event.
-func GetEventInfo(ev Event) (info EventInfo, err os.Error) {
+func GetEventInfo(ev Event) (info EventInfo, err error) {
 	var c_info C.PAPI_event_info_t
 	if errno := Errno(C.PAPI_get_event_info(C.int(ev), &c_info)); errno != papi_ok {
 		err = errno
@@ -411,17 +383,15 @@ func GetNumComponents() int {
 	return int(C.PAPI_num_components())
 }
 
-
 // Return the number of counters present in the specified component.
 // By convention, component 0 is the CPU.
 func GetNumCounters(idx int) int {
 	return int(C.PAPI_num_cmp_hwctrs(C.int(idx)))
 }
 
-
 // Return information about the nth PAPI component.  By convention,
 // component 0 is the CPU.
-func GetComponentInfo(idx int) (info ComponentInfo, err os.Error) {
+func GetComponentInfo(idx int) (info ComponentInfo, err error) {
 	c_info := C.PAPI_get_component_info(C.int(idx))
 	if c_info == nil {
 		err = ENOCMP

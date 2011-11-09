@@ -7,12 +7,10 @@ package papi
 
 import "testing"
 import "time"
-import "os"
-
 
 // Do most of the work for TestFlipFlops() by testing any of Flips(),
 // Flops(), or Ipc() high-level PAPI functions in a consistent manner.
-func testFlipFlopsHelper(t *testing.T, funcName string, hlFunc func() (float32, float32, int64, float32, os.Error)) {
+func testFlipFlopsHelper(t *testing.T, funcName string, hlFunc func() (float32, float32, int64, float32, error)) {
 	const sleep_usecs = 10000
 	const flops = 100
 	counterValues := make([]int64, 3)
@@ -45,7 +43,6 @@ func testFlipFlopsHelper(t *testing.T, funcName string, hlFunc func() (float32, 
 	}
 }
 
-
 // Ensure that the time, floating-point, and instruction counters
 // return believable values.
 func TestFlipFlops(t *testing.T) {
@@ -53,7 +50,6 @@ func TestFlipFlops(t *testing.T) {
 	testFlipFlopsHelper(t, "Flops", Flops)
 	testFlipFlopsHelper(t, "Ipc", Ipc)
 }
-
 
 // Ensure that the high-level counters actually count something.
 func TestHLCounters(t *testing.T) {

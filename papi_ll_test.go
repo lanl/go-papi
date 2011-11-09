@@ -7,8 +7,6 @@ package papi
 
 import "testing"
 import "time"
-import "os"
-
 
 // Ensure that the real-time cycle counter is strictly increasing.
 func TestRealCyc(t *testing.T) {
@@ -19,7 +17,6 @@ func TestRealCyc(t *testing.T) {
 			time1, time2)
 	}
 }
-
 
 // Ensure that the real-time microsecond counter is increasing.
 func TestRealUsec(t *testing.T) {
@@ -38,7 +35,6 @@ func TestRealUsec(t *testing.T) {
 	}
 }
 
-
 // Ensure that the virtual-time cycle counter is increasing.  Ideally,
 // it should be strictly increasing, but this doesn't seem to be the
 // case on all systems.
@@ -55,7 +51,6 @@ func TestVirtCyc(t *testing.T) {
 	}
 }
 
-
 // Ensure that the virtual-time microsecond counter is increasing.
 func TestVirtUsec(t *testing.T) {
 	const maxTimings = 1000000000
@@ -70,7 +65,6 @@ func TestVirtUsec(t *testing.T) {
 	}
 }
 
-
 // Ensure that GetExecutableInfo() at least does *something*.  Not
 // every value is populated on every system, however.
 func TestExeInfo(t *testing.T) {
@@ -84,14 +78,12 @@ func TestExeInfo(t *testing.T) {
 	}
 }
 
-
 // Ensure that PAPI supports at least one counting component (the CPU).
 func TestNumComponents(t *testing.T) {
 	if nc := GetNumComponents(); nc < 1 {
 		t.Fatalf("Expected to see at least 1 counting component but saw only %d", nc)
 	}
 }
-
 
 // Ensure that selected pieces of hardware information are valid.
 func TestHardwareInfo(t *testing.T) {
@@ -113,7 +105,6 @@ func TestHardwareInfo(t *testing.T) {
 	}
 }
 
-
 // Do all of the work for TestEventSet and TestMultiplex.
 func useEventSet(t *testing.T, events EventSet) {
 	const flops = 1000
@@ -124,7 +115,7 @@ func useEventSet(t *testing.T, events EventSet) {
 	}
 
 	// Start counting a few events.
-	var err os.Error
+	var err error
 	if err = events.AddEvents([]Event{TOT_INS, TOT_CYC}); err != nil {
 		t.Fatal(err)
 	}
@@ -153,7 +144,6 @@ func useEventSet(t *testing.T, events EventSet) {
 	}
 }
 
-
 // Test various events in an EventSet's lifetime.  This test is
 // derived from examples/PAPI_add_remove_events.c in the PAPI
 // distribution.
@@ -165,11 +155,10 @@ func TestEventSet(t *testing.T) {
 	}
 }
 
-
 // Test multiplexed event sets.
 func TestMultiplex(t *testing.T) {
 	InitMultiplex()
-	var err os.Error
+	var err error
 	var events EventSet
 	if events, err = CreateEventSet(); err != nil {
 		t.Fatal(err)
@@ -188,7 +177,6 @@ func TestMultiplex(t *testing.T) {
 	useEventSet(t, events)
 }
 
-
 // Ensure that GetEventInfo returns non-empty data.
 func TestGetEventInfo(t *testing.T) {
 	info, err := GetEventInfo(TOT_INS)
@@ -203,11 +191,10 @@ func TestGetEventInfo(t *testing.T) {
 	}
 }
 
-
 // Ensure that enumerating events gives us at least one event.
 func TestEnumEvents(t *testing.T) {
 	var eventList []Event
-	var err os.Error
+	var err error
 
 	// Look for preset events.
 	eventList, err = EnumEvents(PRESET_MASK, ENUM_EVENTS)
