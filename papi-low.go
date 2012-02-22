@@ -340,7 +340,7 @@ func EnumEvents(emask EventMask, modifier EventModifier) (matches []Event, err e
 	for errno = Errno(C.PAPI_enum_event(&c_event, C.int(ENUM_FIRST))); errno == papi_ok; errno = Errno(C.PAPI_enum_event(&c_event, c_mod)) {
 		matches = append(matches, Event(c_event))
 	}
-	if errno != ENOEVNT {
+	if errno != ENOEVNT && errno != ESBSTR {
 		matches = nil
 		err = errno
 		return

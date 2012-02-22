@@ -1,20 +1,9 @@
 # Build the PAPI Go package.
 # By Scott Pakin <pakin@lanl.gov>
 
-include $(GOROOT)/src/Make.inc
+VERSION=1.1
 
-VERSION=1.0
-
-TARG=papi
-
-CGOFILES=\
-	papi.go\
-	papi-high.go\
-	papi-low.go\
-	papi-mh.go\
-	papi-errno.go\
-	papi-event.go\
-	papi-emod.go\
+FULLPKG=github.com/losalamos/go-papi
 
 DISTFILES=\
 	papi.go\
@@ -27,7 +16,38 @@ DISTFILES=\
 	papi_hl_test.go\
 	papi_ll_test.go\
 
-include $(GOROOT)/src/Make.pkg
+BUILTFILES=\
+	papi-errno.go\
+	papi-event.go\
+	papi-emod.go
+
+SOURCES=\
+	$(BUILTFILES)\
+	papi.go\
+	papi-high.go\
+	papi-low.go\
+	papi-mh.go\
+
+# ---------------------------------------------------------------------------
+
+# Use the go tool to do most of the work.
+
+all: $(SOURCES)
+	go build $(FULLPKG)
+
+clean:
+	go clean $(FULLPKG)
+
+distclean: clean
+	$(RM) $(BUILTFILES)
+
+check test: all
+	go test -v $(FULLPKG)
+
+install: all
+	go install $(FULLPKG)
+
+.PHONY: all clean distclean check test install
 
 # ---------------------------------------------------------------------------
 

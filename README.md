@@ -22,34 +22,35 @@ reported.
 Installation
 ------------
 
-If necessary, set the `GOROOT` environment variable to the directory
-containing `src/Make.inc` and `src/Make.pkg` and the `PAPI_INCDIR`
-environment variable to the directory containing `papi.h`.  Also,
-ensure that the directory containing `libpapi.so` is listed in your
-`LD_LIBRARY_PATH`.
+Installation is a bit of a pain, as the new
+[`go`](http://weekly.golang.org/cmd/go/) tool doesn't yet handle
+custom `Makefile`s such as the one `go-papi` requires.  (This
+requirement is due to some of `go-papi`'s source files being generated
+automatically by a Perl script.)
 
-Afterwards, you can follow the usual Go package installation
-procedure:
+First, download `go-papi` into your Go build tree without
+automatically building/installing it:
 
 <pre>
-    git clone http://github.com/losalamos/go-papi $GOROOT/src/pkg/github.com/losalamos/go-papi
+    go get -d -v github.com/losalamos/go-papi
+</pre>
+
+Set the `PAPI_INCDIR` environment variable to the directory containing
+`papi.h`.  Also, ensure that the directory containing `libpapi.so` is
+listed in your `LD_LIBRARY_PATH`.
+
+Next, switch to the `go-papi` directory and build/test/install the
+package:
+
+<pre>
     cd $GOROOT/src/pkg/github.com/losalamos/go-papi
-    gomake
-    gotest
-    gomake install
+    make
+    make check
+    make install
 </pre>
 
-It is then safe to do a `gomake clean`.
-
-At the time of this writing,
-[`goinstall`](http://golang.org/cmd/goinstall/) is unable to install
-packages such as go-papi that require
-[`cgo`](http://golang.org/cmd/cgo/).  If this is ever fixed, the
-preceding steps can be simplified into
-
-<pre>
-    goinstall github.com/losalamos/go-papi
-</pre>
+It is then safe to do a `make clean` to remove all of the byproducts
+of the installation process.
 
 
 Documentation
@@ -68,7 +69,7 @@ Once you install go-papi, you can view the complete go-papi API with
 [`godoc`](http://golang.org/cmd/godoc/), for example by running
 
 <pre>
-    godoc -http=:6060
+    godoc -http=:6060 -index
 </pre>
 
 to start a local Web server then viewing the documentation at

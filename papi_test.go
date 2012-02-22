@@ -10,7 +10,6 @@ import "testing"
 // Prevent SomeValue from being optimized away by exporting it.
 var SomeValue float64 = 123.456
 
-
 // Peform a given number of floating-point operations, just to burn cycle.
 func performWork(numFlops int) {
 	for i := 0; i < numFlops; i++ {
@@ -20,7 +19,6 @@ func performWork(numFlops int) {
 		SomeValue = SomeValue * float64(i%7)
 	}
 }
-
 
 // Ensure that we can map back-and-forth between event names and event codes.
 func TestEventNames(t *testing.T) {
@@ -46,7 +44,6 @@ func TestEventNames(t *testing.T) {
 		}
 	}
 }
-
 
 // Ensure that we can map event modifiers to strings.
 func TestEventModifiers(t *testing.T) {
