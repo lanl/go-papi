@@ -35,7 +35,7 @@ It is then safe to do a `make clean` to remove all of the byproducts of the inst
 Documentation
 -------------
 
-Pre-built documentation for the core part of the go-papi API is available online at <http://gopkgdoc.appspot.com/pkg/github.com/losalamos/go-papi>, courtesy of [GoPkgDoc](http://gopkgdoc.appspot.com/).  Unfortunately, the online documentation omits descriptions of all constants, variables, etc. that are generated during the build process, specifically the list of PAPI events (`papi-event.go`), event modifiers (`papi-emod.go`), and error values (`papi-errno.go`).
+Pre-built documentation for the core part of the go-papi API is available online at http://godoc.org/github.com/losalamos/go-papi.  Unfortunately, the online documentation omits descriptions of all constants, variables, etc. that are generated during the build process, specifically the list of PAPI events (`papi-event.go`), event modifiers (`papi-emod.go`), and error values (`papi-errno.go`).
 
 Once you install go-papi, you can view the complete go-papi API with [`godoc`](http://golang.org/cmd/godoc/), for example by running
 
@@ -52,7 +52,7 @@ License
 
 BSD-ish with a "modifications must be indicated" clause.  See <http://github.com/losalamos/go-papi/blob/master/LICENSE> for the full text.
 
-Los Alamos National Security, LLC (LANS) owns the copyright to Goop, a component of the LANL Go Suite (identified internally as LA-CC-11-056).
+Los Alamos National Security, LLC (LANS) owns the copyright to go-papi, a component of the LANL Go Suite (identified internally as LA-CC-11-056).
 
 Author
 ------
