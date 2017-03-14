@@ -3,7 +3,7 @@
 
 VERSION=1.1
 
-FULLPKG=github.com/losalamos/go-papi
+FULLPKG=github.com/lanl/go-papi
 
 DISTFILES=\
 	papi.go\
