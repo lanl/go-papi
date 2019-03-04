@@ -1,6 +1,3 @@
-// Copyright (C) 2011, Los Alamos National Security, LLC.
-// Use of this source code is governed by a BSD-style license.
-
 // This file tests the low-level features of the PAPI library.
 
 package papi

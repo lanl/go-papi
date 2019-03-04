@@ -1,6 +1,3 @@
-// Copyright (C) 2011, Los Alamos National Security, LLC.
-// Use of this source code is governed by a BSD-style license.
-
 // This file defines various PAPI datatypes and methods on those types
 // and initializes the PAPI library.
 

@@ -87,9 +87,6 @@ if ($ifdef) {
 my $hfilebase = basename $hfilename;
 open(GOFMT, "|gofmt") || die "open: $!\n";
 print GOFMT <<"GO_HEADER";
-// Copyright (C) 2011, Los Alamos National Security, LLC.
-// Use of this source code is governed by a BSD-style license.
-
 package papi
 
 /*

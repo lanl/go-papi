@@ -52,7 +52,7 @@ License
 
 BSD-ish with a "modifications must be indicated" clause.  See <http://github.com/lanl/go-papi/blob/master/LICENSE.md> for the full text.
 
-Los Alamos National Security, LLC (LANS) owns the copyright to go-papi, a component of the LANL Go Suite (identified internally as LA-CC-11-056).
+Triad National Security, LLC (Triad) owns the copyright to go-papi, a component of the LANL Go Suite (identified internally as LA-CC-11-056).
 
 Author
 ------
